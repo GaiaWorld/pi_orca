@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>我的网页</title>
+</head>
+
+<body>
+  <script type="module">
+    const PI = 3.141592653589793238;
+
+    import init from './pkg/pi_orca.js';
+    import { RVOSimulator, Vector2, cos, sin } from './pkg/pi_orca.js';
+
+    const temp = 200;
+    const num = 100;
+    const maxSpeed = 2.0;
+    let lastpotion = [];
+
+    function setup_scenario(sim, goals, divs) {
+      sim.setTimeStep(0.25);
+
+      sim.setAgentDefaults(15.0, 10, 10.0, 10.0, 2, maxSpeed, Vector2.default());
+
+
+      for (let i = 0; i < num; i++) {
+        let x = cos(i * 2.0 * PI / num) * temp;
+        let y = sin(i * 2.0 * PI / num) * temp;
+
+        console.log("x: ", x);
+        console.log("y: ", y);
+
+        divs[i] = document.createElement("div");
+        divs[i].style.left = parseInt(x + temp) + "px";
+        divs[i].style.top = parseInt(y + temp) + "px";
+        divs[i].style.width = "4px";
+        divs[i].style.height = "4px";
+        divs[i].style.borderRadius = "50%";
+        divs[i].style.backgroundColor = "rgb(" + parseInt(i / num * 256) + ", 0, 0)";
+        // console.log(parseInt(1 / num * 256));
+        divs[i].style.position = "absolute";
+        document.body.appendChild(divs[i]);
+
+        sim.addAgent(Vector2.new(x, y));
+        console.log("-sim.getAgentPosition(i): ", sim.getAgentPosition(i).neg());
+
+        goals.push(sim.getAgentPosition(i).neg());
+      }
+    }
+
+    function update_visualization(sim, divs) {
+      // console.log("{}", sim.getGlobalTime());
+      for (let i = 0; i < sim.getNumAgents(); i++) {
+
+        let position = sim.getAgentPosition(i);
+
+        // if (lastpotion[i]) {
+        //   if (Vector2.absSq(lastpotion[i].sub(position)) > maxSpeed * maxSpeed) {
+        //     console.log("i: ", i);
+        //     console.log("sim.getAgentPosition(i): ", sim.getAgentPosition(i).x(), " ", sim.getAgentPosition(i).y());
+        //     console.log("glastpotion[i]: ", lastpotion[i].x(), ", ", lastpotion[i].y());
+        //   }
+        // }
+
+        lastpotion[i] = position;
+        // console.log("Agent: " + i + "; x: " + position.x() + "; y: " + position.y());
+
+        let x = Math.round(position.x()) + temp;
+        let y = Math.round(position.y()) + temp;
+        // console.log("Agent2: " + i + "; x: " + x + "; y: " + y);
+
+        divs[i].style.left = x + "px";
+        divs[i].style.top = y + "px";
+        // console.log("divs[i]: ", divs[i]);
+      }
+      // console.log(log);
+    }
+
+    function set_preferred_velocities(sim, goals) {
+      /*
+       * Set the preferred velocity to be a vector of unit magnitude (speed) in the
+       * direction of the goal.
+       */
+
+      for (let i = 0; i < sim.getNumAgents(); i++) {
+        let goal_vector = goals[i].sub(sim.getAgentPosition(i));
+
+        if (Vector2.absSq(goal_vector) > 1) {
+          goal_vector = Vector2.normalize(goal_vector);
+        }
+
+        sim.setAgentPrefVelocity(i, goal_vector);
+      }
+    }
+
+    function reached_goal(sim, goals) {
+      /* Check if all agents have reached their goals. */
+      for (let i = 0; i < sim.getNumAgents(); i++) {
+        if (Vector2.absSq((sim.getAgentPosition(i).sub(goals[i])))
+          > sim.getAgentRadius(i) * sim.getAgentRadius(i)) {
+          if (sim.getGlobalTime() > 866) {
+            console.log("i: ", i);
+            console.log("sim.getAgentPosition(i): ", sim.getAgentPosition(i).x(), " ", sim.getAgentPosition(i).y());
+            console.log("goals[i]: ", goals[i].x(), ", ", goals[i].y());
+            console.log("sim.getAgentRadius(i): ", sim.getAgentRadius(i));
+            console.log("sim.getGlobalTime(): ", sim.getGlobalTime());
+            console.log("Vector2.absSq((sim.getAgentPosition().sub(goals[i])))`", Vector2.absSq((sim.getAgentPosition().sub(goals[i]))));
+            console.log("sim.getAgentPosition().sub(goals[i]))", sim.getAgentPosition().sub(goals[i]));
+          }
+          return false;
+        }
+      }
+
+      return true;
+    }
+
+    init().then(module => {
+      // 在这里调用 Rust 函数
+      console.log(module)
+
+
+      let sim = RVOSimulator.default();
+      let goals = [];
+      let divs = [];
+
+      setup_scenario(sim, goals, divs);
+
+
+      let r = 0;
+      let id = setInterval(() => {
+        // let begin = performance.now();
+        console.log("num: ", r++);
+        update_visualization(sim, divs);
+
+        set_preferred_velocities(sim, goals);
+        sim.doStep();
+        // console.log("======= time: ", performance.now() - begin);
+        if (reached_goal(sim, goals)) {
+          clearInterval(id);
+        }
+      }, 16)
+    });
+
+
+  </script>
+</body>
+
+</html>

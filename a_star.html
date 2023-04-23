@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>我的网页</title>
+</head>
+
+<body>
+  <script type="module">
+    const PI = 3.141592653589793238;
+
+    import init from './pkg/pi_orca.js';
+    import { RVOSimulator, Vector2, Vertices, TileMap, TileObstacle, AStar, NodeIndex } from './pkg/pi_orca.js';
+
+    const temp = 20;
+    const num = 100;
+    const maxSpeed = 2.0;
+    const RAND_MAX = 0x7fff;
+
+    const map_width = 11;
+    const map_height = 11;
+    const agent_row = 1;
+    const agent_column = 1;
+
+    let lastpotion = [];
+
+    function setup_scenario(sim, goals, divs, obstacles_div, paths) {
+
+      /*
+       * Add agents, specifying their start position, and store their goals on the
+       * opposite side of the environment.
+       */
+      let id = 0;
+      for (let i = 0; i < paths.length; ++i) {
+        let start_pos = paths[i].next().mul_number(temp);
+        console.log("start_pos" + i + ": " + start_pos.x() + " " + start_pos.y());
+        let end_pos = paths[i].next().mul_number(temp);
+        console.log("end_pos" + i + ": " + end_pos.x() + " " + end_pos.y());
+
+        sim.add_agent(start_pos);
+        goals.push(end_pos);
+
+        divs[id] = document.createElement("div");
+        divs[id].id = id;
+        divs[id].style.left = Math.floor(start_pos.x()) + "px";
+        divs[id].style.top = Math.floor(start_pos.y()) + "px";
+        divs[id].style.width = "4px";
+        divs[id].style.height = "4px";
+        divs[id].style.borderRadius = "50%";
+        divs[id].style.backgroundColor = "rgb(255, 0, 0)";
+        divs[id].style.position = "absolute";
+        document.body.appendChild(divs[id]);
+        id += 1;
+      }
+
+      /*
+       * Add (polygonal) obstacles, specifying their vertices in counterclockwise
+       * order.
+       */
+      // let obstacle1 = Vertices.new();
+
+      // obstacle1.add(Vector2.new(120, 90));
+      // obstacle1.add(Vector2.new(90, 90));
+      // obstacle1.add(Vector2.new(90, 120));
+      // obstacle1.add(Vector2.new(120, 120));
+      // sim.add_obstacle(obstacle1);
+
+      // obstacles_div[0] = document.createElement("div");
+      // obstacles_div[0].style.left = Math.floor(70) + "px";
+      // obstacles_div[0].style.top = Math.floor(70) + "px";
+      // obstacles_div[0].style.width = "60px";
+      // obstacles_div[0].style.height = "60px";
+      // obstacles_div[0].style.backgroundColor = "rgba(0, 0, 0, 0.5)";
+      // obstacles_div[0].style.position = "absolute";
+      // document.body.appendChild(obstacles_div[0]);
+
+    }
+
+    function update_visualization(sim, divs) {
+      // console.log("{}", sim.get_global_time());
+      for (let i = 0; i < sim.get_num_agents(); i++) {
+
+        let position = sim.get_agent_position(i);
+        // console.log("Agent: " + i + "; x: " + position.x() + "; y: " + position.y());
+
+        let x = Math.round(position.x());
+        let y = Math.round(position.y());
+        // console.log("Agent2: " + i + "; x: " + x + "; y: " + y);
+
+        divs[i].style.left = x + "px";
+        divs[i].style.top = y + "px";
+      }
+    }
+
+    function set_preferred_velocities(sim, goals) {
+      /*
+       * Set the preferred velocity to be a vector of unit magnitude (speed) in the
+       * direction of the goal.
+       */
+
+      for (let i = 0; i < sim.get_num_agents(); i++) {
+        let goal_vector = goals[i].sub(sim.get_agent_position(i));
+
+        if (Vector2.abs_sq(goal_vector) > 1) {
+          goal_vector = Vector2.normalize(goal_vector);
+        }
+        // console.log("========= goal_vector", goal_vector.x(), goal_vector.y());
+        sim.set_agent_pref_velocity(i, goal_vector);
+
+        /*
+        * Perturb a little to avoid deadlocks due to perfect symmetry.
+        */
+        // let angle = Math.random() * RAND_MAX * 2.0 * PI / RAND_MAX;
+        // let dist = Math.random() * RAND_MAX * 0.0001 / RAND_MAX;
+        // console.log("angle: " + angle + "; dist: " + dist);
+        // let v = Vector2.new(Math.cos(angle), Math.sin(angle)).mul_number(dist).add(sim.get_agent_pref_velocity(i))
+        // console.log("v.x: " + v.x() + "; v.y" + v.y());
+
+        // sim.set_agent_pref_velocity(i, v);
+      }
+    }
+
+    function reached_goal(sim, goals, paths) {
+      /* Check if all agents have reached their goals. */
+      let reached_goal = true;
+      for (let i = 0; i < sim.get_num_agents(); ++i) {
+        // console.log("agent" + i + "距离目标: " + Vector2.abs_sq(sim.get_agent_position(i).sub(goals[i])));
+        if (Vector2.abs_sq(sim.get_agent_position(i).sub(goals[i])) > 10.0 * 10.0) {
+          reached_goal = false;
+        } else {
+          let next_pos = paths[i].next();
+          if (next_pos) {
+            let pos = next_pos.mul_number(temp);
+            console.log("next_pos" + i + ": " + pos.x() + " " + pos.y());
+            goals[i] = pos;
+            reached_goal = false;
+          }
+        }
+
+      }
+      return reached_goal;
+    }
+
+    function init_map() {
+      let map = TileMap.new(map_width, map_height);
+
+      map.set_obstacle(NodeIndex.new(49), TileObstacle.Center);
+      map.set_obstacle(NodeIndex.new(50), TileObstacle.Center);
+      map.set_obstacle(NodeIndex.new(48), TileObstacle.Center);
+      map.set_obstacle(NodeIndex.new(60), TileObstacle.Center);
+      map.set_obstacle(NodeIndex.new(59), TileObstacle.Center);
+      map.set_obstacle(NodeIndex.new(61), TileObstacle.Center);
+      map.set_obstacle(NodeIndex.new(71), TileObstacle.Center);
+      map.set_obstacle(NodeIndex.new(72), TileObstacle.Center);
+      map.set_obstacle(NodeIndex.new(70), TileObstacle.Center);
+
+      return map;
+    }
+
+    function find_path(paths, a_star, map) {
+      let res = a_star.find_path(map, 1000, NodeIndex.new(0), NodeIndex.new(120));
+      console.log("r: ", res);
+      paths.push(a_star.result(NodeIndex.new(120), map_height));
+
+      res = a_star.find_path(map, 1000, NodeIndex.new(120), NodeIndex.new(0));
+      console.log("r: ", res);
+      paths.push(a_star.result(NodeIndex.new(0), map_height));
+
+      res = a_star.find_path(map, 1000, NodeIndex.new(110), NodeIndex.new(10));
+      console.log("r: ", res);
+      paths.push(a_star.result(NodeIndex.new(10), map_height));
+
+      res = a_star.find_path(map, 1000, NodeIndex.new(10), NodeIndex.new(110));
+      console.log("r: ", res);
+      paths.push(a_star.result(NodeIndex.new(110), map_height));
+    }
+
+    init().then(module => {
+      // 在这里调用 Rust 函数
+
+      let map = init_map();
+      let a_star = AStar.new(map_width, map_height, 1000);
+
+      let paths = [];
+      find_path(paths, a_star, map);
+
+      // for (let i = 0; i < paths.length; i++) {
+      //   console.log("path" + i + ": " + paths[i].next().x() + ", " + paths[i].next().y());
+      // }
+
+      let sim = RVOSimulator.new(
+        2000, // note: 此参数为障碍物的最大顶点个数，实际传入的定点数必须小于等于此数 
+        0.25, // note: 此参数为全局时间步长，单位为秒
+        15.0,
+        10, 5.0, 5.0, 2.5, 2.0, Vector2.default());
+      /* Specify the global time step of the simulation. */
+      //  sim.set_time_step(0.25);
+
+      /* Specify the default parameters for agents that are subsequently added. */
+      // sim.set_agent_defaults();
+      let goals = [];
+      let divs = [];
+      let divs2 = [];
+
+      setup_scenario(sim, goals, divs, divs2, paths);
+
+      let r = 0;
+      let id = setInterval(() => {
+        // let begin = performance.now();
+        // console.log("num: ", r++);
+        update_visualization(sim, divs);
+
+        set_preferred_velocities(sim, goals);
+        sim.do_step();
+        // console.log("======= time: ", performance.now() - begin);
+        if (reached_goal(sim, goals, paths)) {
+          clearInterval(id);
+        }
+      }, 16)
+    });
+
+
+  </script>
+</body>
+
+</html>

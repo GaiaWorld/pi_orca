@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>我的网页</title>
+</head>
+
+<body>
+  <script type="module">
+    const PI = 3.141592653589793238;
+
+    import init from './pkg/pi_orca.js';
+    import { RVOSimulator, Vector2, Vertices } from './pkg/pi_orca.js';
+
+    const temp = 200;
+    const num = 100;
+    const maxSpeed = 2.0;
+    const RAND_MAX = 0x7fff;
+
+    let lastpotion = [];
+
+    function setup_scenario(sim, goals, divs, obstacles_div) {
+
+
+      /* Specify the global time step of the simulation. */
+      sim.set_time_step(0.25);
+
+      /* Specify the default parameters for agents that are subsequently added. */
+      sim.set_agent_defaults(15.0, 10, 5.0, 5.0, 2.5, 2.0, Vector2.default());
+
+      /*
+       * Add agents, specifying their start position, and store their goals on the
+       * opposite side of the environment.
+       */
+      let row = 5;
+      let cout = 5;
+      let id = 0;
+      for (let i = 0; i < row; ++i) {
+        for (let j = 0; j < cout; ++j) {
+          let x = 55.0 + i * 10.0;
+          let y = 55.0 + j * 10.0;
+
+          sim.add_agent(Vector2.new(x, y));
+          goals.push(Vector2.new(-x, -y));
+
+          divs[id] = document.createElement("div");
+          divs[id].id = id;
+          divs[id].style.left = Math.floor(x * 2 + temp) + "px";
+          divs[id].style.top = Math.floor(y * 2 + temp) + "px";
+          divs[id].style.width = "4px";
+          divs[id].style.height = "4px";
+          divs[id].style.borderRadius = "50%";
+          divs[id].style.backgroundColor = "rgb(255, 0, 0)";
+          divs[id].style.position = "absolute";
+          document.body.appendChild(divs[id]);
+          id += 1;
+
+          x = -55.0 - i * 10.0;
+          y = 55.0 + j * 10.0;
+          sim.add_agent(Vector2.new(x, y));
+          goals.push(Vector2.new(-x, -y));
+
+          divs[id] = document.createElement("div");
+          divs[id].id = id;
+          divs[id].style.left = Math.floor(x + temp) + "px";
+          divs[id].style.top = Math.floor(y + temp) + "px";
+          divs[id].style.width = "4px";
+          divs[id].style.height = "4px";
+          divs[id].style.borderRadius = "50%";
+          divs[id].style.backgroundColor = "rgb(255, 0, 255)";
+          divs[id].style.position = "absolute";
+          document.body.appendChild(divs[id]);
+          id += 1;
+
+          x = 55.0 + i * 10.0;
+          y = -55.0 - j * 10.0;
+          sim.add_agent(Vector2.new(x, y));
+          goals.push(Vector2.new(-x, -y));
+          divs[id] = document.createElement("div");
+          divs[id].id = id;
+          divs[id].style.left = Math.floor(x + temp) + "px";
+          divs[id].style.top = Math.floor(y + temp) + "px";
+          divs[id].style.width = "4px";
+          divs[id].style.height = "4px";
+          divs[id].style.borderRadius = "50%";
+          divs[id].style.backgroundColor = "rgb(0, 255, 255)";
+          divs[id].style.position = "absolute";
+          document.body.appendChild(divs[id]);
+          id += 1;
+
+          x = -55.0 - i * 10.0;
+          y = -55.0 - j * 10.0;
+          sim.add_agent(Vector2.new(x, y));
+          goals.push(Vector2.new(-x, -y));
+          divs[id] = document.createElement("div");
+          divs[id].id = id;
+          divs[id].style.left = Math.floor(x + temp) + "px";
+          divs[id].style.top = Math.floor(y + temp) + "px";
+          divs[id].style.width = "4px";
+          divs[id].style.height = "4px";
+          divs[id].style.borderRadius = "50%";
+          divs[id].style.backgroundColor = "rgb(0, 255, 0)";
+          divs[id].style.position = "absolute";
+          document.body.appendChild(divs[id]);
+          id += 1;
+        }
+      }
+
+      /*
+       * Add (polygonal) obstacles, specifying their vertices in counterclockwise
+       * order.
+       */
+      let obstacle1 = Vertices.new();
+      let obstacle2 = Vertices.new();
+      let obstacle3 = Vertices.new();
+      let obstacle4 = Vertices.new();
+
+      obstacle1.add(Vector2.new(-10.0, 40.0));
+      obstacle1.add(Vector2.new(-40.0, 40.0));
+      obstacle1.add(Vector2.new(-40.0, 10.0));
+      obstacle1.add(Vector2.new(-10.0, 10.0));
+
+      obstacle2.add(Vector2.new(10.0, 40.0));
+      obstacle2.add(Vector2.new(10.0, 10.0));
+      obstacle2.add(Vector2.new(40.0, 10.0));
+      obstacle2.add(Vector2.new(40.0, 40.0));
+
+      obstacle3.add(Vector2.new(10.0, -40.0));
+      obstacle3.add(Vector2.new(40.0, -40.0));
+      obstacle3.add(Vector2.new(40.0, -10.0));
+      obstacle3.add(Vector2.new(10.0, -10.0));
+
+      obstacle4.add(Vector2.new(-10.0, -40.0));
+      obstacle4.add(Vector2.new(-10.0, -10.0));
+      obstacle4.add(Vector2.new(-40.0, -10.0));
+      obstacle4.add(Vector2.new(-40.0, -40.0));
+
+      sim.add_obstacle(obstacle1);
+      obstacles_div[0] = document.createElement("div");
+      obstacles_div[0].style.left = Math.floor(-40 + temp + 1) + "px";
+      obstacles_div[0].style.top = Math.floor(11 + temp) + "px";
+      obstacles_div[0].style.width = "30px";
+      obstacles_div[0].style.height = "30px";
+      obstacles_div[0].style.backgroundColor = "rgba(0, 0, 0, 0.5)";
+      obstacles_div[0].style.position = "absolute";
+      document.body.appendChild(obstacles_div[0]);
+
+      sim.add_obstacle(obstacle2);
+      obstacles_div[1] = document.createElement("div");
+      obstacles_div[1].style.left = Math.floor(10 + temp+ 1) + "px";
+      obstacles_div[1].style.top = Math.floor(11 + temp) + "px";
+      obstacles_div[1].style.width = "30px";
+      obstacles_div[1].style.height = "30px";
+      obstacles_div[1].style.backgroundColor = "rgba(0, 0, 0, 0.5)";
+      obstacles_div[1].style.position = "absolute";
+      document.body.appendChild(obstacles_div[1]);
+
+      sim.add_obstacle(obstacle3);
+      obstacles_div[2] = document.createElement("div");
+      obstacles_div[2].style.left = Math.floor(11 + temp + 1) + "px";
+      obstacles_div[2].style.top = Math.floor(-41 + temp) + "px";
+      obstacles_div[2].style.width = "30px";
+      obstacles_div[2].style.height = "30px";
+      // obstacles_div[0].style.borderRadius = "50%";
+      obstacles_div[2].style.backgroundColor = "rgba(0, 0, 0, 0.5)";
+      obstacles_div[2].style.position = "absolute";
+      document.body.appendChild(obstacles_div[2]);
+
+      sim.add_obstacle(obstacle4);
+      obstacles_div[3] = document.createElement("div");
+      obstacles_div[3].style.left = Math.floor(-40 + temp + 1) + "px";
+      obstacles_div[3].style.top = Math.floor(-41 + temp) + "px";
+      obstacles_div[3].style.width = "30px";
+      obstacles_div[3].style.height = "30px";
+      // obstacles_div[0].style.borderRadius = "50%";
+      obstacles_div[3].style.backgroundColor = "rgba(0, 0, 0, 0.5)";
+      obstacles_div[3].style.position = "absolute";
+      document.body.appendChild(obstacles_div[3]);
+
+      /* Process the obstacles so that they are accounted for in the simulation. */
+      // sim.processObstacles();
+    }
+
+    function update_visualization(sim, divs) {
+      console.log("{}", sim.get_global_time());
+      for (let i = 0; i < sim.get_num_agents(); i++) {
+
+        let position = sim.get_agent_position(i);
+        // console.log("Agent: " + i + "; x: " + position.x() + "; y: " + position.y());
+
+        let x = Math.round(position.x()) + temp;
+        let y = Math.round(position.y()) + temp;
+        // console.log("Agent2: " + i + "; x: " + x + "; y: " + y);
+
+        divs[i].style.left = x + "px";
+        divs[i].style.top = y + "px";
+      }
+    }
+
+    function set_preferred_velocities(sim, goals) {
+      /*
+       * Set the preferred velocity to be a vector of unit magnitude (speed) in the
+       * direction of the goal.
+       */
+
+      for (let i = 0; i < sim.get_num_agents(); i++) {
+        let goal_vector = goals[i].sub(sim.get_agent_position(i));
+
+        if (Vector2.abs_sq(goal_vector) > 1) {
+          goal_vector = Vector2.normalize(goal_vector);
+        }
+        // console.log("========= goal_vector", goal_vector.x(), goal_vector.y());
+        sim.set_agent_pref_velocity(i, goal_vector);
+
+        /*
+        * Perturb a little to avoid deadlocks due to perfect symmetry.
+        */
+        let angle = Math.random() * RAND_MAX * 2.0 * PI / RAND_MAX;
+        let dist = Math.random() * RAND_MAX * 0.0001 / RAND_MAX;
+        // console.log("angle: " + angle + "; dist: " + dist);
+        let v = Vector2.new(Math.cos(angle), Math.sin(angle)).mul_number(dist).add(sim.get_agent_pref_velocity(i))
+        // console.log("v.x: " + v.x() + "; v.y" + v.y());
+
+        sim.set_agent_pref_velocity(i, v);
+      }
+    }
+
+    function reached_goal(sim, goals) {
+      /* Check if all agents have reached their goals. */
+      for (let i = 0; i < sim.get_num_agents(); ++i) {
+        if (Vector2.abs_sq(sim.get_agent_position(i).sub(goals[i])) > 20.0 * 20.0) {
+          return false;
+        }
+      }
+
+      return true;
+    }
+
+    init().then(module => {
+      // 在这里调用 Rust 函数
+      console.log(module)
+
+
+      let sim = RVOSimulator.default();
+      let goals = [];
+      let divs = [];
+      let divs2 = [];
+      setup_scenario(sim, goals, divs, divs2);
+
+
+      let r = 0;
+      let id = setInterval(() => {
+        // let begin = performance.now();
+        // console.log("num: ", r++);
+        update_visualization(sim, divs);
+
+        set_preferred_velocities(sim, goals);
+        sim.do_step();
+        // console.log("======= time: ", performance.now() - begin);
+        if (reached_goal(sim, goals)) {
+          clearInterval(id);
+        }
+      }, 16)
+    });
+
+
+  </script>
+</body>
+
+</html>
