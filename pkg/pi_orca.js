@@ -68,21 +68,19 @@ export class AStar {
     find_path(tile_map, max_number, start, end) {
         _assertClass(tile_map, TileMap);
         _assertClass(start, NodeIndex);
-        var ptr0 = start.__destroy_into_raw();
         _assertClass(end, NodeIndex);
-        var ptr1 = end.__destroy_into_raw();
-        const ret = wasm.astar_find_path(this.ptr, tile_map.ptr, max_number, ptr0, ptr1);
+        const ret = wasm.astar_find_path(this.ptr, tile_map.ptr, max_number, start.ptr, end.ptr);
         return ret === 0 ? undefined : NodeIndex.__wrap(ret);
     }
     /**
     * @param {NodeIndex} node
-    * @param {number} column
+    * @param {TileMap} tile_map
     * @returns {ResultPath}
     */
-    result(node, column) {
+    result(node, tile_map) {
         _assertClass(node, NodeIndex);
-        var ptr0 = node.__destroy_into_raw();
-        const ret = wasm.astar_result(this.ptr, ptr0, column);
+        _assertClass(tile_map, TileMap);
+        const ret = wasm.astar_result(this.ptr, node.ptr, tile_map.ptr);
         return ResultPath.__wrap(ret);
     }
 }
@@ -333,7 +331,7 @@ export class Line {
     * @returns {Vector2}
     */
     get point() {
-        const ret = wasm.__wbg_get_agent_new_velocity(this.ptr);
+        const ret = wasm.__wbg_get_line_point(this.ptr);
         return Vector2.__wrap(ret);
     }
     /**
@@ -345,7 +343,7 @@ export class Line {
     set point(arg0) {
         _assertClass(arg0, Vector2);
         var ptr0 = arg0.__destroy_into_raw();
-        wasm.__wbg_set_agent_new_velocity(this.ptr, ptr0);
+        wasm.__wbg_set_line_point(this.ptr, ptr0);
     }
     /**
     *
@@ -354,7 +352,7 @@ export class Line {
     * @returns {Vector2}
     */
     get direction() {
-        const ret = wasm.__wbg_get_agent_position_(this.ptr);
+        const ret = wasm.__wbg_get_line_direction(this.ptr);
         return Vector2.__wrap(ret);
     }
     /**
@@ -366,7 +364,7 @@ export class Line {
     set direction(arg0) {
         _assertClass(arg0, Vector2);
         var ptr0 = arg0.__destroy_into_raw();
-        wasm.__wbg_set_agent_position_(this.ptr, ptr0);
+        wasm.__wbg_set_line_direction(this.ptr, ptr0);
     }
 }
 /**
@@ -568,10 +566,11 @@ export class RVOSimulator {
         wasm.__wbg_set_rvosimulator_time_step(this.ptr, arg0);
     }
     /**
+    * @param {number} max_obstacle
     * @returns {RVOSimulator}
     */
-    static default() {
-        const ret = wasm.rvosimulator_default();
+    static default(max_obstacle) {
+        const ret = wasm.rvosimulator_default(max_obstacle);
         return RVOSimulator.__wrap(ret);
     }
     /**
@@ -618,6 +617,12 @@ export class RVOSimulator {
         return ret >>> 0;
     }
     /**
+    *
+    *     * @brief 为模拟添加新障碍。
+    *     * @param[in] vertices 逆时针顺序排列的多边形障碍物的顶点列表。
+    *     * @return 障碍物第一个顶点的编号，当顶点数小于2时为返回usize::MAX。
+    *     * @note 要添加“负面”障碍，例如环境周围的边界多边形，顶点应按顺时针顺序列出。
+    *
     * @param {Vertices} vertices
     * @returns {number}
     */
@@ -759,7 +764,7 @@ export class RVOSimulator {
     * @returns {number}
     */
     get_global_time() {
-        const ret = wasm.__wbg_get_rvosimulator_global_time(this.ptr);
+        const ret = wasm.rvosimulator_get_global_time(this.ptr);
         return ret;
     }
     /**
@@ -804,7 +809,7 @@ export class RVOSimulator {
     * @returns {number}
     */
     get_time_step() {
-        const ret = wasm.__wbg_get_rvosimulator_time_step(this.ptr);
+        const ret = wasm.rvosimulator_get_time_step(this.ptr);
         return ret;
     }
     /**
@@ -821,6 +826,24 @@ export class RVOSimulator {
         wasm.rvosimulator_process_obstacles();
     }
     /**
+    *
+    *    * @brief     为添加的任何新代理设置默认属性。
+    *    * @param[in] neighborDist    新代理在导航中考虑的默认最大中心点到中心点到其他代理的最大距离。
+    *                                 这个数字越大，模拟的运行时间就越长。
+    *                                 如果数字太低，模拟将不安全。
+    *                                 必须是非负数。
+    *    * @param[in] maxNeighbors    新代理在导航中考虑的默认最大其他代理数。
+    *                                 这个数字越大，模拟的运行时间越长。
+    *                                 如果数字太低，模拟将不安全。
+    *    * @param[in] timeHorizon     模拟计算的新代理速度相对于其他代理安全的默认最小时间量。
+    *                                 这个数字越大，代理就会越快响应其他代理的存在，但代理在选择速度方面的自由度就越小。
+    *                                 必须是正数。
+    *    * @param[in] timeHorizonObst 通过模拟计算的新代理的速度相对于障碍物是安全的默认最小时间量。
+    *                                 这个数字越大，代理越快响应障碍的存在，但代理的自由度越低 选择它的速度。
+    *                                 必须是正数。
+    *    * @param[in] radius          新代理的默认半径。 必须是非负数。
+    *    * @param[in] maxSpeed        新代理的默认最大速度。 必须是非负数。
+    *
     * @param {number} neighbor_dist
     * @param {number} max_neighbors
     * @param {number} time_horizon
@@ -903,7 +926,7 @@ export class RVOSimulator {
     * @param {number} time_step
     */
     set_time_step(time_step) {
-        wasm.__wbg_set_rvosimulator_time_step(this.ptr, time_step);
+        wasm.rvosimulator_set_time_step(this.ptr, time_step);
     }
 }
 /**
@@ -973,8 +996,7 @@ export class TileMap {
     */
     set_obstacle(index, obstacle) {
         _assertClass(index, NodeIndex);
-        var ptr0 = index.__destroy_into_raw();
-        wasm.tilemap_set_obstacle(this.ptr, ptr0, obstacle);
+        wasm.tilemap_set_obstacle(this.ptr, index.ptr, obstacle);
     }
 }
 /**
@@ -1045,14 +1067,14 @@ export class Vector2 {
     * @returns {number}
     */
     x() {
-        const ret = wasm.__wbg_get_vector2_x(this.ptr);
+        const ret = wasm.vector2_x(this.ptr);
         return ret;
     }
     /**
     * @returns {number}
     */
     y() {
-        const ret = wasm.__wbg_get_vector2_y(this.ptr);
+        const ret = wasm.vector2_y(this.ptr);
         return ret;
     }
     /**

@@ -28,10 +28,10 @@ export class AStar {
   find_path(tile_map: TileMap, max_number: number, start: NodeIndex, end: NodeIndex): NodeIndex | undefined;
 /**
 * @param {NodeIndex} node
-* @param {number} column
+* @param {TileMap} tile_map
 * @returns {ResultPath}
 */
-  result(node: NodeIndex, column: number): ResultPath;
+  result(node: NodeIndex, tile_map: TileMap): ResultPath;
 }
 /**
 */
@@ -145,9 +145,10 @@ export class Obstacle {
 export class RVOSimulator {
   free(): void;
 /**
+* @param {number} max_obstacle
 * @returns {RVOSimulator}
 */
-  static default(): RVOSimulator;
+  static default(max_obstacle: number): RVOSimulator;
 /**
 * @param {number} max_obstacle
 * @param {number} time_step
@@ -179,6 +180,12 @@ export class RVOSimulator {
 */
   add_agent2(position: Vector2, neighbor_dist: number, max_neighbors: number, time_horizon: number, time_horizon_obst: number, radius: number, max_speed: number, velocity: Vector2): number;
 /**
+*
+*     * @brief 为模拟添加新障碍。
+*     * @param[in] vertices 逆时针顺序排列的多边形障碍物的顶点列表。
+*     * @return 障碍物第一个顶点的编号，当顶点数小于2时为返回usize::MAX。
+*     * @note 要添加“负面”障碍，例如环境周围的边界多边形，顶点应按顺时针顺序列出。
+*     
 * @param {Vertices} vertices
 * @returns {number}
 */
@@ -304,6 +311,24 @@ export class RVOSimulator {
 */
   static process_obstacles(): void;
 /**
+*
+*    * @brief     为添加的任何新代理设置默认属性。
+*    * @param[in] neighborDist    新代理在导航中考虑的默认最大中心点到中心点到其他代理的最大距离。
+*                                 这个数字越大，模拟的运行时间就越长。
+*                                 如果数字太低，模拟将不安全。
+*                                 必须是非负数。
+*    * @param[in] maxNeighbors    新代理在导航中考虑的默认最大其他代理数。
+*                                 这个数字越大，模拟的运行时间越长。
+*                                 如果数字太低，模拟将不安全。
+*    * @param[in] timeHorizon     模拟计算的新代理速度相对于其他代理安全的默认最小时间量。
+*                                 这个数字越大，代理就会越快响应其他代理的存在，但代理在选择速度方面的自由度就越小。
+*                                 必须是正数。
+*    * @param[in] timeHorizonObst 通过模拟计算的新代理的速度相对于障碍物是安全的默认最小时间量。
+*                                 这个数字越大，代理越快响应障碍的存在，但代理的自由度越低 选择它的速度。
+*                                 必须是正数。
+*    * @param[in] radius          新代理的默认半径。 必须是非负数。
+*    * @param[in] maxSpeed        新代理的默认最大速度。 必须是非负数。
+*    
 * @param {number} neighbor_dist
 * @param {number} max_neighbors
 * @param {number} time_horizon
@@ -543,6 +568,10 @@ export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembl
 export interface InitOutput {
   readonly memory: WebAssembly.Memory;
   readonly __wbg_line_free: (a: number) => void;
+  readonly __wbg_get_line_point: (a: number) => number;
+  readonly __wbg_set_line_point: (a: number, b: number) => void;
+  readonly __wbg_get_line_direction: (a: number) => number;
+  readonly __wbg_set_line_direction: (a: number, b: number) => void;
   readonly __wbg_agent_free: (a: number) => void;
   readonly __wbg_get_agent_max_neighbors: (a: number) => number;
   readonly __wbg_set_agent_max_neighbors: (a: number, b: number) => void;
@@ -568,10 +597,28 @@ export interface InitOutput {
   readonly __wbg_set_agent_velocity_: (a: number, b: number) => void;
   readonly __wbg_get_agent_id_: (a: number) => number;
   readonly __wbg_set_agent_id_: (a: number, b: number) => void;
-  readonly __wbg_set_line_point: (a: number, b: number) => void;
-  readonly __wbg_set_line_direction: (a: number, b: number) => void;
-  readonly __wbg_get_line_point: (a: number) => number;
-  readonly __wbg_get_line_direction: (a: number) => number;
+  readonly __wbg_vector2_free: (a: number) => void;
+  readonly __wbg_get_vector2_x: (a: number) => number;
+  readonly __wbg_set_vector2_x: (a: number, b: number) => void;
+  readonly __wbg_get_vector2_y: (a: number) => number;
+  readonly __wbg_set_vector2_y: (a: number, b: number) => void;
+  readonly vector2_default: () => number;
+  readonly vector2_new: (a: number, b: number) => number;
+  readonly vector2_x: (a: number) => number;
+  readonly vector2_y: (a: number) => number;
+  readonly vector2_add: (a: number, b: number) => number;
+  readonly vector2_sub: (a: number, b: number) => number;
+  readonly vector2_mul: (a: number, b: number) => number;
+  readonly vector2_mul_number: (a: number, b: number) => number;
+  readonly vector2_div: (a: number, b: number) => number;
+  readonly vector2_neg: (a: number) => number;
+  readonly vector2_abs: (a: number) => number;
+  readonly vector2_abs_sq: (a: number) => number;
+  readonly vector2_det: (a: number, b: number) => number;
+  readonly vector2_normalize: (a: number) => number;
+  readonly vector2_dist_sq_point_line_segment: (a: number, b: number, c: number) => number;
+  readonly vector2_left_of: (a: number, b: number, c: number) => number;
+  readonly vector2_sqr: (a: number) => number;
   readonly __wbg_id_free: (a: number) => void;
   readonly __wbg_get_id_0: (a: number) => number;
   readonly __wbg_set_id_0: (a: number, b: number) => void;
@@ -580,7 +627,7 @@ export interface InitOutput {
   readonly __wbg_set_rvosimulator_global_time: (a: number, b: number) => void;
   readonly __wbg_get_rvosimulator_time_step: (a: number) => number;
   readonly __wbg_set_rvosimulator_time_step: (a: number, b: number) => void;
-  readonly rvosimulator_default: () => number;
+  readonly rvosimulator_default: (a: number) => number;
   readonly rvosimulator_new: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number) => number;
   readonly rvosimulator_add_agent: (a: number, b: number) => number;
   readonly rvosimulator_add_agent2: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number) => number;
@@ -601,11 +648,13 @@ export interface InitOutput {
   readonly rvosimulator_get_agent_time_horizon: (a: number, b: number) => number;
   readonly rvosimulator_get_agent_time_horizon_obst: (a: number, b: number) => number;
   readonly rvosimulator_get_agent_velocity: (a: number, b: number) => number;
+  readonly rvosimulator_get_global_time: (a: number) => number;
   readonly rvosimulator_get_num_agents: (a: number) => number;
   readonly rvosimulator_get_num_obstacle_vertices: (a: number) => number;
   readonly rvosimulator_get_obstacle_vertex: (a: number, b: number) => number;
   readonly rvosimulator_get_next_obstacle_vertex_no: (a: number, b: number) => number;
   readonly rvosimulator_get_prev_obstacle_vertex_no: (a: number, b: number) => number;
+  readonly rvosimulator_get_time_step: (a: number) => number;
   readonly rvosimulator_get_agents: (a: number, b: number) => number;
   readonly rvosimulator_process_obstacles: () => void;
   readonly rvosimulator_set_agent_defaults: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number) => void;
@@ -619,42 +668,6 @@ export interface InitOutput {
   readonly rvosimulator_set_agent_time_horizon_obst: (a: number, b: number, c: number) => void;
   readonly rvosimulator_set_agent_velocity: (a: number, b: number, c: number) => void;
   readonly rvosimulator_set_time_step: (a: number, b: number) => void;
-  readonly rvosimulator_get_global_time: (a: number) => number;
-  readonly rvosimulator_get_time_step: (a: number) => number;
-  readonly __wbg_vector2_free: (a: number) => void;
-  readonly __wbg_get_vector2_x: (a: number) => number;
-  readonly __wbg_set_vector2_x: (a: number, b: number) => void;
-  readonly __wbg_get_vector2_y: (a: number) => number;
-  readonly __wbg_set_vector2_y: (a: number, b: number) => void;
-  readonly vector2_default: () => number;
-  readonly vector2_add: (a: number, b: number) => number;
-  readonly vector2_sub: (a: number, b: number) => number;
-  readonly vector2_mul: (a: number, b: number) => number;
-  readonly vector2_mul_number: (a: number, b: number) => number;
-  readonly vector2_div: (a: number, b: number) => number;
-  readonly vector2_neg: (a: number) => number;
-  readonly vector2_abs: (a: number) => number;
-  readonly vector2_abs_sq: (a: number) => number;
-  readonly vector2_det: (a: number, b: number) => number;
-  readonly vector2_normalize: (a: number) => number;
-  readonly vector2_dist_sq_point_line_segment: (a: number, b: number, c: number) => number;
-  readonly vector2_left_of: (a: number, b: number, c: number) => number;
-  readonly vector2_x: (a: number) => number;
-  readonly vector2_y: (a: number) => number;
-  readonly vector2_new: (a: number, b: number) => number;
-  readonly vector2_sqr: (a: number) => number;
-  readonly __wbg_nodeindex_free: (a: number) => void;
-  readonly nodeindex_new: (a: number) => number;
-  readonly nodeindex_index: (a: number) => number;
-  readonly __wbg_tilemap_free: (a: number) => void;
-  readonly __wbg_resultpath_free: (a: number) => void;
-  readonly resultpath_next: (a: number) => number;
-  readonly tilemap_new: (a: number, b: number) => number;
-  readonly tilemap_set_obstacle: (a: number, b: number, c: number) => void;
-  readonly __wbg_astar_free: (a: number) => void;
-  readonly astar_new: (a: number, b: number, c: number) => number;
-  readonly astar_find_path: (a: number, b: number, c: number, d: number, e: number) => number;
-  readonly astar_result: (a: number, b: number, c: number) => number;
   readonly __wbg_obstacle_free: (a: number) => void;
   readonly __wbg_get_obstacle_is_convex: (a: number) => number;
   readonly __wbg_set_obstacle_is_convex: (a: number, b: number) => void;
@@ -674,6 +687,18 @@ export interface InitOutput {
   readonly vertices_add: (a: number, b: number) => void;
   readonly vertices_get: (a: number, b: number) => number;
   readonly vertices_len: (a: number) => number;
+  readonly __wbg_nodeindex_free: (a: number) => void;
+  readonly nodeindex_new: (a: number) => number;
+  readonly nodeindex_index: (a: number) => number;
+  readonly __wbg_tilemap_free: (a: number) => void;
+  readonly __wbg_resultpath_free: (a: number) => void;
+  readonly resultpath_next: (a: number) => number;
+  readonly tilemap_new: (a: number, b: number) => number;
+  readonly tilemap_set_obstacle: (a: number, b: number, c: number) => void;
+  readonly __wbg_astar_free: (a: number) => void;
+  readonly astar_new: (a: number, b: number, c: number) => number;
+  readonly astar_find_path: (a: number, b: number, c: number, d: number, e: number) => number;
+  readonly astar_result: (a: number, b: number, c: number) => number;
 }
 
 export type SyncInitInput = BufferSource | WebAssembly.Module;
