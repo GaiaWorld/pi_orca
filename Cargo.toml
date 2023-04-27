@@ -10,9 +10,17 @@ crate-type = ["cdylib"]
 
 [dependencies]
 wasm-bindgen = "0.2"
-pi_spatialtree = "0.3"
-nalgebra = "0.30"
+pi_spatial = "0.4"
+nalgebra = "0.32"
 pi_slotmap="0.1"
-ncollide2d = "0.33"
-pi_path_finding = "0.3.0"
+parry2d = "0.13"
+pi_path_finding = "0.3"
 # rand = "0.8"
+
+# 减小release版本动态库的体积
+[profile.release]
+strip = true
+lto = true
+panic = "abort"
+codegen-units = 1
+opt-level = "s"

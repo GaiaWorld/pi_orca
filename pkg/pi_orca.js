@@ -23,6 +23,63 @@ function _assertClass(instance, klass) {
     }
     return instance.ptr;
 }
+
+let cachedInt32Memory0 = null;
+
+function getInt32Memory0() {
+    if (cachedInt32Memory0 === null || cachedInt32Memory0.byteLength === 0) {
+        cachedInt32Memory0 = new Int32Array(wasm.memory.buffer);
+    }
+    return cachedInt32Memory0;
+}
+
+let cachedFloat64Memory0 = null;
+
+function getFloat64Memory0() {
+    if (cachedFloat64Memory0 === null || cachedFloat64Memory0.byteLength === 0) {
+        cachedFloat64Memory0 = new Float64Array(wasm.memory.buffer);
+    }
+    return cachedFloat64Memory0;
+}
+
+let cachedFloat32Memory0 = null;
+
+function getFloat32Memory0() {
+    if (cachedFloat32Memory0 === null || cachedFloat32Memory0.byteLength === 0) {
+        cachedFloat32Memory0 = new Float32Array(wasm.memory.buffer);
+    }
+    return cachedFloat32Memory0;
+}
+/**
+* @param {TileMap} map
+* @param {Vector2} start
+* @param {Vector2} end
+* @returns {boolean}
+*/
+export function test_line(map, start, end) {
+    _assertClass(map, TileMap);
+    _assertClass(start, Vector2);
+    _assertClass(end, Vector2);
+    const ret = wasm.test_line(map.ptr, start.ptr, end.ptr);
+    return ret !== 0;
+}
+
+/**
+* @param {Vector2} a_min
+* @param {Vector2} a_max
+* @param {Vector2} b_min
+* @param {Vector2} b_max
+* @returns {boolean}
+*/
+export function aabb_intersects(a_min, a_max, b_min, b_max) {
+    _assertClass(a_min, Vector2);
+    _assertClass(a_max, Vector2);
+    _assertClass(b_min, Vector2);
+    _assertClass(b_max, Vector2);
+    const ret = wasm.aabb_intersects(a_min.ptr, a_max.ptr, b_min.ptr, b_max.ptr);
+    return ret !== 0;
+}
+
 /**
 */
 export const TileObstacle = Object.freeze({ Right:1,"1":"Right",Down:2,"2":"Down",Center:4,"4":"Center", });
@@ -293,7 +350,7 @@ export class ID {
     */
     get 0() {
         const ret = wasm.__wbg_get_id_0(this.ptr);
-        return ret >>> 0;
+        return ret;
     }
     /**
     * @param {number} arg0
@@ -441,17 +498,19 @@ export class Obstacle {
         wasm.__wbg_set_obstacle_is_convex(this.ptr, arg0);
     }
     /**
-    * @returns {number}
+    * @returns {ID}
     */
     get next_obstacle() {
         const ret = wasm.__wbg_get_obstacle_next_obstacle(this.ptr);
-        return ret;
+        return ID.__wrap(ret);
     }
     /**
-    * @param {number} arg0
+    * @param {ID} arg0
     */
     set next_obstacle(arg0) {
-        wasm.__wbg_set_obstacle_next_obstacle(this.ptr, arg0);
+        _assertClass(arg0, ID);
+        var ptr0 = arg0.__destroy_into_raw();
+        wasm.__wbg_set_obstacle_next_obstacle(this.ptr, ptr0);
     }
     /**
     * @returns {Vector2}
@@ -469,17 +528,19 @@ export class Obstacle {
         wasm.__wbg_set_obstacle_point_(this.ptr, ptr0);
     }
     /**
-    * @returns {number}
+    * @returns {ID}
     */
     get prev_obstacle() {
         const ret = wasm.__wbg_get_obstacle_prev_obstacle(this.ptr);
-        return ret;
+        return ID.__wrap(ret);
     }
     /**
-    * @param {number} arg0
+    * @param {ID} arg0
     */
     set prev_obstacle(arg0) {
-        wasm.__wbg_set_obstacle_prev_obstacle(this.ptr, arg0);
+        _assertClass(arg0, ID);
+        var ptr0 = arg0.__destroy_into_raw();
+        wasm.__wbg_set_obstacle_prev_obstacle(this.ptr, ptr0);
     }
     /**
     * @returns {Vector2}
@@ -497,17 +558,19 @@ export class Obstacle {
         wasm.__wbg_set_obstacle_unit_dir(this.ptr, ptr0);
     }
     /**
-    * @returns {number}
+    * @returns {ID}
     */
     get id_() {
         const ret = wasm.__wbg_get_obstacle_id_(this.ptr);
-        return ret >>> 0;
+        return ID.__wrap(ret);
     }
     /**
-    * @param {number} arg0
+    * @param {ID} arg0
     */
     set id_(arg0) {
-        wasm.__wbg_set_obstacle_id_(this.ptr, arg0);
+        _assertClass(arg0, ID);
+        var ptr0 = arg0.__destroy_into_raw();
+        wasm.__wbg_set_obstacle_id_(this.ptr, ptr0);
     }
     /**
     * @returns {Obstacle}
@@ -566,15 +629,15 @@ export class RVOSimulator {
         wasm.__wbg_set_rvosimulator_time_step(this.ptr, arg0);
     }
     /**
-    * @param {number} max_obstacle
+    * @param {number} _max_obstacle
     * @returns {RVOSimulator}
     */
-    static default(max_obstacle) {
-        const ret = wasm.rvosimulator_default(max_obstacle);
+    static default(_max_obstacle) {
+        const ret = wasm.rvosimulator_default(_max_obstacle);
         return RVOSimulator.__wrap(ret);
     }
     /**
-    * @param {number} max_obstacle
+    * @param {number} _max_obstacle
     * @param {number} time_step
     * @param {number} neighbor_dist
     * @param {number} max_neighbors
@@ -585,9 +648,9 @@ export class RVOSimulator {
     * @param {Vector2} velocity
     * @returns {RVOSimulator}
     */
-    static new(max_obstacle, time_step, neighbor_dist, max_neighbors, time_horizon, time_horizon_obst, radius, max_speed, velocity) {
+    static new(_max_obstacle, time_step, neighbor_dist, max_neighbors, time_horizon, time_horizon_obst, radius, max_speed, velocity) {
         _assertClass(velocity, Vector2);
-        const ret = wasm.rvosimulator_new(max_obstacle, time_step, neighbor_dist, max_neighbors, time_horizon, time_horizon_obst, radius, max_speed, velocity.ptr);
+        const ret = wasm.rvosimulator_new(_max_obstacle, time_step, neighbor_dist, max_neighbors, time_horizon, time_horizon_obst, radius, max_speed, velocity.ptr);
         return RVOSimulator.__wrap(ret);
     }
     /**
@@ -597,7 +660,7 @@ export class RVOSimulator {
     add_agent(position) {
         _assertClass(position, Vector2);
         const ret = wasm.rvosimulator_add_agent(this.ptr, position.ptr);
-        return ret >>> 0;
+        return ret;
     }
     /**
     * @param {Vector2} position
@@ -614,7 +677,15 @@ export class RVOSimulator {
         _assertClass(position, Vector2);
         _assertClass(velocity, Vector2);
         const ret = wasm.rvosimulator_add_agent2(this.ptr, position.ptr, neighbor_dist, max_neighbors, time_horizon, time_horizon_obst, radius, max_speed, velocity.ptr);
-        return ret >>> 0;
+        return ret;
+    }
+    /**
+    * @param {number} id
+    * @returns {boolean}
+    */
+    remove_agent(id) {
+        const ret = wasm.rvosimulator_remove_agent(this.ptr, id);
+        return ret !== 0;
     }
     /**
     *
@@ -630,200 +701,20 @@ export class RVOSimulator {
         _assertClass(vertices, Vertices);
         var ptr0 = vertices.__destroy_into_raw();
         const ret = wasm.rvosimulator_add_obstacle(this.ptr, ptr0);
-        return ret >>> 0;
+        return ret;
+    }
+    /**
+    * @param {number} id
+    * @returns {boolean}
+    */
+    remove_obstacle(id) {
+        const ret = wasm.rvosimulator_remove_obstacle(this.ptr, id);
+        return ret !== 0;
     }
     /**
     */
     do_step() {
         wasm.rvosimulator_do_step(this.ptr);
-    }
-    /**
-    * @param {number} agent_no
-    * @param {number} neighbor_no
-    * @returns {number}
-    */
-    get_agent_agent_neighbor(agent_no, neighbor_no) {
-        const ret = wasm.rvosimulator_get_agent_agent_neighbor(this.ptr, agent_no, neighbor_no);
-        return ret >>> 0;
-    }
-    /**
-    * @param {number} agent_no
-    * @returns {number}
-    */
-    get_agent_max_neighbors(agent_no) {
-        const ret = wasm.rvosimulator_get_agent_max_neighbors(this.ptr, agent_no);
-        return ret >>> 0;
-    }
-    /**
-    * @param {number} agent_no
-    * @returns {number}
-    */
-    get_agent_max_speed(agent_no) {
-        const ret = wasm.rvosimulator_get_agent_max_speed(this.ptr, agent_no);
-        return ret;
-    }
-    /**
-    * @param {number} agent_no
-    * @returns {number}
-    */
-    get_agent_neighbor_dist(agent_no) {
-        const ret = wasm.rvosimulator_get_agent_neighbor_dist(this.ptr, agent_no);
-        return ret;
-    }
-    /**
-    * @param {number} agent_no
-    * @returns {number}
-    */
-    get_agent_num_agent_neighbors(agent_no) {
-        const ret = wasm.rvosimulator_get_agent_num_agent_neighbors(this.ptr, agent_no);
-        return ret >>> 0;
-    }
-    /**
-    * @param {number} agent_no
-    * @returns {number}
-    */
-    get_agent_num_obstacle_neighbors(agent_no) {
-        const ret = wasm.rvosimulator_get_agent_num_obstacle_neighbors(this.ptr, agent_no);
-        return ret >>> 0;
-    }
-    /**
-    * @param {number} agent_no
-    * @returns {number}
-    */
-    get_agent_num_orcalines(agent_no) {
-        const ret = wasm.rvosimulator_get_agent_num_orcalines(this.ptr, agent_no);
-        return ret >>> 0;
-    }
-    /**
-    * @param {number} agent_no
-    * @param {number} neighbor_no
-    * @returns {number}
-    */
-    get_agent_obstacle_neighbor(agent_no, neighbor_no) {
-        const ret = wasm.rvosimulator_get_agent_obstacle_neighbor(this.ptr, agent_no, neighbor_no);
-        return ret >>> 0;
-    }
-    /**
-    * @param {number} agent_no
-    * @param {number} line_no
-    * @returns {Line}
-    */
-    get_agent_orcaline(agent_no, line_no) {
-        const ret = wasm.rvosimulator_get_agent_orcaline(this.ptr, agent_no, line_no);
-        return Line.__wrap(ret);
-    }
-    /**
-    * @param {number} agent_no
-    * @returns {Vector2}
-    */
-    get_agent_position(agent_no) {
-        const ret = wasm.rvosimulator_get_agent_position(this.ptr, agent_no);
-        return Vector2.__wrap(ret);
-    }
-    /**
-    * @param {number} agent_no
-    * @returns {Vector2}
-    */
-    get_agent_pref_velocity(agent_no) {
-        const ret = wasm.rvosimulator_get_agent_pref_velocity(this.ptr, agent_no);
-        return Vector2.__wrap(ret);
-    }
-    /**
-    * @param {number} agent_no
-    * @returns {number}
-    */
-    get_agent_radius(agent_no) {
-        const ret = wasm.rvosimulator_get_agent_radius(this.ptr, agent_no);
-        return ret;
-    }
-    /**
-    * @param {number} agent_no
-    * @returns {number}
-    */
-    get_agent_time_horizon(agent_no) {
-        const ret = wasm.rvosimulator_get_agent_time_horizon(this.ptr, agent_no);
-        return ret;
-    }
-    /**
-    * @param {number} agent_no
-    * @returns {number}
-    */
-    get_agent_time_horizon_obst(agent_no) {
-        const ret = wasm.rvosimulator_get_agent_time_horizon_obst(this.ptr, agent_no);
-        return ret;
-    }
-    /**
-    * @param {number} agent_no
-    * @returns {Vector2}
-    */
-    get_agent_velocity(agent_no) {
-        const ret = wasm.rvosimulator_get_agent_velocity(this.ptr, agent_no);
-        return Vector2.__wrap(ret);
-    }
-    /**
-    * @returns {number}
-    */
-    get_global_time() {
-        const ret = wasm.rvosimulator_get_global_time(this.ptr);
-        return ret;
-    }
-    /**
-    * @returns {number}
-    */
-    get_num_agents() {
-        const ret = wasm.rvosimulator_get_num_agents(this.ptr);
-        return ret >>> 0;
-    }
-    /**
-    * @returns {number}
-    */
-    get_num_obstacle_vertices() {
-        const ret = wasm.rvosimulator_get_num_obstacle_vertices(this.ptr);
-        return ret >>> 0;
-    }
-    /**
-    * @param {number} vertex_no
-    * @returns {Vector2}
-    */
-    get_obstacle_vertex(vertex_no) {
-        const ret = wasm.rvosimulator_get_obstacle_vertex(this.ptr, vertex_no);
-        return Vector2.__wrap(ret);
-    }
-    /**
-    * @param {number} vertex_no
-    * @returns {number}
-    */
-    get_next_obstacle_vertex_no(vertex_no) {
-        const ret = wasm.rvosimulator_get_next_obstacle_vertex_no(this.ptr, vertex_no);
-        return ret >>> 0;
-    }
-    /**
-    * @param {number} vertex_no
-    * @returns {number}
-    */
-    get_prev_obstacle_vertex_no(vertex_no) {
-        const ret = wasm.rvosimulator_get_prev_obstacle_vertex_no(this.ptr, vertex_no);
-        return ret >>> 0;
-    }
-    /**
-    * @returns {number}
-    */
-    get_time_step() {
-        const ret = wasm.rvosimulator_get_time_step(this.ptr);
-        return ret;
-    }
-    /**
-    * @param {number} agent_no
-    * @returns {number}
-    */
-    get_agents(agent_no) {
-        const ret = wasm.rvosimulator_get_agents(this.ptr, agent_no);
-        return ret;
-    }
-    /**
-    */
-    static process_obstacles() {
-        wasm.rvosimulator_process_obstacles();
     }
     /**
     *
@@ -858,69 +749,353 @@ export class RVOSimulator {
     }
     /**
     * @param {number} agent_no
+    * @param {number} neighbor_no
+    * @returns {number | undefined}
+    */
+    get_agent_agent_neighbor(agent_no, neighbor_no) {
+        try {
+            const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
+            wasm.rvosimulator_get_agent_agent_neighbor(retptr, this.ptr, agent_no, neighbor_no);
+            var r0 = getInt32Memory0()[retptr / 4 + 0];
+            var r2 = getFloat64Memory0()[retptr / 8 + 1];
+            return r0 === 0 ? undefined : r2;
+        } finally {
+            wasm.__wbindgen_add_to_stack_pointer(16);
+        }
+    }
+    /**
+    * @param {number} agent_no
+    * @returns {number | undefined}
+    */
+    get_agent_max_neighbors(agent_no) {
+        try {
+            const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
+            wasm.rvosimulator_get_agent_max_neighbors(retptr, this.ptr, agent_no);
+            var r0 = getInt32Memory0()[retptr / 4 + 0];
+            var r1 = getInt32Memory0()[retptr / 4 + 1];
+            return r0 === 0 ? undefined : r1 >>> 0;
+        } finally {
+            wasm.__wbindgen_add_to_stack_pointer(16);
+        }
+    }
+    /**
+    * @param {number} agent_no
+    * @returns {number | undefined}
+    */
+    get_agent_max_speed(agent_no) {
+        try {
+            const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
+            wasm.rvosimulator_get_agent_max_speed(retptr, this.ptr, agent_no);
+            var r0 = getInt32Memory0()[retptr / 4 + 0];
+            var r1 = getFloat32Memory0()[retptr / 4 + 1];
+            return r0 === 0 ? undefined : r1;
+        } finally {
+            wasm.__wbindgen_add_to_stack_pointer(16);
+        }
+    }
+    /**
+    * @param {number} agent_no
+    * @returns {number | undefined}
+    */
+    get_agent_neighbor_dist(agent_no) {
+        try {
+            const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
+            wasm.rvosimulator_get_agent_neighbor_dist(retptr, this.ptr, agent_no);
+            var r0 = getInt32Memory0()[retptr / 4 + 0];
+            var r1 = getFloat32Memory0()[retptr / 4 + 1];
+            return r0 === 0 ? undefined : r1;
+        } finally {
+            wasm.__wbindgen_add_to_stack_pointer(16);
+        }
+    }
+    /**
+    * @param {number} agent_no
+    * @returns {number | undefined}
+    */
+    get_agent_num_agent_neighbors(agent_no) {
+        try {
+            const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
+            wasm.rvosimulator_get_agent_num_agent_neighbors(retptr, this.ptr, agent_no);
+            var r0 = getInt32Memory0()[retptr / 4 + 0];
+            var r1 = getInt32Memory0()[retptr / 4 + 1];
+            return r0 === 0 ? undefined : r1 >>> 0;
+        } finally {
+            wasm.__wbindgen_add_to_stack_pointer(16);
+        }
+    }
+    /**
+    * @param {number} agent_no
+    * @returns {number | undefined}
+    */
+    get_agent_num_obstacle_neighbors(agent_no) {
+        try {
+            const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
+            wasm.rvosimulator_get_agent_num_obstacle_neighbors(retptr, this.ptr, agent_no);
+            var r0 = getInt32Memory0()[retptr / 4 + 0];
+            var r1 = getInt32Memory0()[retptr / 4 + 1];
+            return r0 === 0 ? undefined : r1 >>> 0;
+        } finally {
+            wasm.__wbindgen_add_to_stack_pointer(16);
+        }
+    }
+    /**
+    * @param {number} agent_no
+    * @returns {number | undefined}
+    */
+    get_agent_num_orcalines(agent_no) {
+        try {
+            const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
+            wasm.rvosimulator_get_agent_num_orcalines(retptr, this.ptr, agent_no);
+            var r0 = getInt32Memory0()[retptr / 4 + 0];
+            var r1 = getInt32Memory0()[retptr / 4 + 1];
+            return r0 === 0 ? undefined : r1 >>> 0;
+        } finally {
+            wasm.__wbindgen_add_to_stack_pointer(16);
+        }
+    }
+    /**
+    * @param {number} agent_no
+    * @param {number} neighbor_no
+    * @returns {number | undefined}
+    */
+    get_agent_obstacle_neighbor(agent_no, neighbor_no) {
+        try {
+            const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
+            wasm.rvosimulator_get_agent_obstacle_neighbor(retptr, this.ptr, agent_no, neighbor_no);
+            var r0 = getInt32Memory0()[retptr / 4 + 0];
+            var r2 = getFloat64Memory0()[retptr / 8 + 1];
+            return r0 === 0 ? undefined : r2;
+        } finally {
+            wasm.__wbindgen_add_to_stack_pointer(16);
+        }
+    }
+    /**
+    * @param {number} agent_no
+    * @param {number} line_no
+    * @returns {Line | undefined}
+    */
+    get_agent_orcaline(agent_no, line_no) {
+        const ret = wasm.rvosimulator_get_agent_orcaline(this.ptr, agent_no, line_no);
+        return ret === 0 ? undefined : Line.__wrap(ret);
+    }
+    /**
+    * @param {number} agent_no
+    * @returns {Vector2 | undefined}
+    */
+    get_agent_position(agent_no) {
+        const ret = wasm.rvosimulator_get_agent_position(this.ptr, agent_no);
+        return ret === 0 ? undefined : Vector2.__wrap(ret);
+    }
+    /**
+    * @param {number} agent_no
+    * @returns {Vector2 | undefined}
+    */
+    get_agent_pref_velocity(agent_no) {
+        const ret = wasm.rvosimulator_get_agent_pref_velocity(this.ptr, agent_no);
+        return ret === 0 ? undefined : Vector2.__wrap(ret);
+    }
+    /**
+    * @param {number} agent_no
+    * @returns {number | undefined}
+    */
+    get_agent_radius(agent_no) {
+        try {
+            const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
+            wasm.rvosimulator_get_agent_radius(retptr, this.ptr, agent_no);
+            var r0 = getInt32Memory0()[retptr / 4 + 0];
+            var r1 = getFloat32Memory0()[retptr / 4 + 1];
+            return r0 === 0 ? undefined : r1;
+        } finally {
+            wasm.__wbindgen_add_to_stack_pointer(16);
+        }
+    }
+    /**
+    * @param {number} agent_no
+    * @returns {number | undefined}
+    */
+    get_agent_time_horizon(agent_no) {
+        try {
+            const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
+            wasm.rvosimulator_get_agent_time_horizon(retptr, this.ptr, agent_no);
+            var r0 = getInt32Memory0()[retptr / 4 + 0];
+            var r1 = getFloat32Memory0()[retptr / 4 + 1];
+            return r0 === 0 ? undefined : r1;
+        } finally {
+            wasm.__wbindgen_add_to_stack_pointer(16);
+        }
+    }
+    /**
+    * @param {number} agent_no
+    * @returns {number | undefined}
+    */
+    get_agent_time_horizon_obst(agent_no) {
+        try {
+            const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
+            wasm.rvosimulator_get_agent_time_horizon_obst(retptr, this.ptr, agent_no);
+            var r0 = getInt32Memory0()[retptr / 4 + 0];
+            var r1 = getFloat32Memory0()[retptr / 4 + 1];
+            return r0 === 0 ? undefined : r1;
+        } finally {
+            wasm.__wbindgen_add_to_stack_pointer(16);
+        }
+    }
+    /**
+    * @param {number} agent_no
+    * @returns {Vector2 | undefined}
+    */
+    get_agent_velocity(agent_no) {
+        const ret = wasm.rvosimulator_get_agent_velocity(this.ptr, agent_no);
+        return ret === 0 ? undefined : Vector2.__wrap(ret);
+    }
+    /**
+    * @returns {number}
+    */
+    get_global_time() {
+        const ret = wasm.rvosimulator_get_global_time(this.ptr);
+        return ret;
+    }
+    /**
+    * @returns {number}
+    */
+    get_num_agents() {
+        const ret = wasm.rvosimulator_get_num_agents(this.ptr);
+        return ret >>> 0;
+    }
+    /**
+    * @returns {number}
+    */
+    get_num_obstacle_vertices() {
+        const ret = wasm.rvosimulator_get_num_obstacle_vertices(this.ptr);
+        return ret >>> 0;
+    }
+    /**
+    * @param {number} vertex_no
+    * @returns {Vector2 | undefined}
+    */
+    get_obstacle_vertex(vertex_no) {
+        const ret = wasm.rvosimulator_get_obstacle_vertex(this.ptr, vertex_no);
+        return ret === 0 ? undefined : Vector2.__wrap(ret);
+    }
+    /**
+    * @param {number} vertex_no
+    * @returns {number | undefined}
+    */
+    get_next_obstacle_vertex_no(vertex_no) {
+        try {
+            const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
+            wasm.rvosimulator_get_next_obstacle_vertex_no(retptr, this.ptr, vertex_no);
+            var r0 = getInt32Memory0()[retptr / 4 + 0];
+            var r2 = getFloat64Memory0()[retptr / 8 + 1];
+            return r0 === 0 ? undefined : r2;
+        } finally {
+            wasm.__wbindgen_add_to_stack_pointer(16);
+        }
+    }
+    /**
+    * @param {number} vertex_no
+    * @returns {number | undefined}
+    */
+    get_prev_obstacle_vertex_no(vertex_no) {
+        try {
+            const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
+            wasm.rvosimulator_get_prev_obstacle_vertex_no(retptr, this.ptr, vertex_no);
+            var r0 = getInt32Memory0()[retptr / 4 + 0];
+            var r2 = getFloat64Memory0()[retptr / 8 + 1];
+            return r0 === 0 ? undefined : r2;
+        } finally {
+            wasm.__wbindgen_add_to_stack_pointer(16);
+        }
+    }
+    /**
+    * @returns {number}
+    */
+    get_time_step() {
+        const ret = wasm.rvosimulator_get_time_step(this.ptr);
+        return ret;
+    }
+    /**
+    * @param {number} agent_no
     * @param {number} max_neighbors
+    * @returns {boolean}
     */
     set_agent_max_neighbors(agent_no, max_neighbors) {
-        wasm.rvosimulator_set_agent_max_neighbors(this.ptr, agent_no, max_neighbors);
+        const ret = wasm.rvosimulator_set_agent_max_neighbors(this.ptr, agent_no, max_neighbors);
+        return ret !== 0;
     }
     /**
     * @param {number} agent_no
     * @param {number} max_speed
+    * @returns {boolean}
     */
     set_agent_max_speed(agent_no, max_speed) {
-        wasm.rvosimulator_set_agent_max_speed(this.ptr, agent_no, max_speed);
+        const ret = wasm.rvosimulator_set_agent_max_speed(this.ptr, agent_no, max_speed);
+        return ret !== 0;
     }
     /**
     * @param {number} agent_no
     * @param {number} neighbor_dist
+    * @returns {boolean}
     */
     set_agent_neighbor_dist(agent_no, neighbor_dist) {
-        wasm.rvosimulator_set_agent_neighbor_dist(this.ptr, agent_no, neighbor_dist);
+        const ret = wasm.rvosimulator_set_agent_neighbor_dist(this.ptr, agent_no, neighbor_dist);
+        return ret !== 0;
     }
     /**
     * @param {number} agent_no
     * @param {Vector2} position
+    * @returns {boolean}
     */
     set_agent_position(agent_no, position) {
         _assertClass(position, Vector2);
-        wasm.rvosimulator_set_agent_position(this.ptr, agent_no, position.ptr);
+        const ret = wasm.rvosimulator_set_agent_position(this.ptr, agent_no, position.ptr);
+        return ret !== 0;
     }
     /**
     * @param {number} agent_no
     * @param {Vector2} pref_velocity
+    * @returns {boolean}
     */
     set_agent_pref_velocity(agent_no, pref_velocity) {
         _assertClass(pref_velocity, Vector2);
-        wasm.rvosimulator_set_agent_pref_velocity(this.ptr, agent_no, pref_velocity.ptr);
+        const ret = wasm.rvosimulator_set_agent_pref_velocity(this.ptr, agent_no, pref_velocity.ptr);
+        return ret !== 0;
     }
     /**
     * @param {number} agent_no
     * @param {number} radius
+    * @returns {boolean}
     */
     set_agent_radius(agent_no, radius) {
-        wasm.rvosimulator_set_agent_radius(this.ptr, agent_no, radius);
+        const ret = wasm.rvosimulator_set_agent_radius(this.ptr, agent_no, radius);
+        return ret !== 0;
     }
     /**
     * @param {number} agent_no
     * @param {number} time_horizon
+    * @returns {boolean}
     */
     set_agent_time_horizon(agent_no, time_horizon) {
-        wasm.rvosimulator_set_agent_time_horizon(this.ptr, agent_no, time_horizon);
+        const ret = wasm.rvosimulator_set_agent_time_horizon(this.ptr, agent_no, time_horizon);
+        return ret !== 0;
     }
     /**
     * @param {number} agent_no
     * @param {number} time_horizon_obst
+    * @returns {boolean}
     */
     set_agent_time_horizon_obst(agent_no, time_horizon_obst) {
-        wasm.rvosimulator_set_agent_time_horizon_obst(this.ptr, agent_no, time_horizon_obst);
+        const ret = wasm.rvosimulator_set_agent_time_horizon_obst(this.ptr, agent_no, time_horizon_obst);
+        return ret !== 0;
     }
     /**
     * @param {number} agent_no
     * @param {Vector2} velocity
+    * @returns {boolean}
     */
     set_agent_velocity(agent_no, velocity) {
         _assertClass(velocity, Vector2);
-        wasm.rvosimulator_set_agent_velocity(this.ptr, agent_no, velocity.ptr);
+        const ret = wasm.rvosimulator_set_agent_velocity(this.ptr, agent_no, velocity.ptr);
+        return ret !== 0;
     }
     /**
     * @param {number} time_step
@@ -1325,6 +1500,9 @@ function initMemory(imports, maybe_memory) {
 function finalizeInit(instance, module) {
     wasm = instance.exports;
     init.__wbindgen_wasm_module = module;
+    cachedFloat32Memory0 = null;
+    cachedFloat64Memory0 = null;
+    cachedInt32Memory0 = null;
     cachedUint8Memory0 = null;
 
 

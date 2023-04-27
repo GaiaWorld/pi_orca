@@ -1,16 +1,16 @@
 use wasm_bindgen::prelude::wasm_bindgen;
 
-use crate::vector2::Vector2;
+use crate::{util::ID, vector2::Vector2};
 
 #[wasm_bindgen]
 #[derive(Clone, Copy, Debug)]
 pub struct Obstacle {
     pub is_convex: bool,
-    pub next_obstacle: *mut Obstacle,
+    pub next_obstacle: ID,
     pub point_: Vector2,
-    pub prev_obstacle: *mut Obstacle,
+    pub prev_obstacle: ID,
     pub unit_dir: Vector2,
-    pub id_: usize,
+    pub id_: ID,
 }
 
 #[wasm_bindgen]
@@ -18,34 +18,12 @@ impl Obstacle {
     pub fn default() -> Self {
         Self {
             is_convex: false,
-            next_obstacle: std::ptr::null_mut(),
+            next_obstacle: Default::default(),
             point_: Default::default(),
-            prev_obstacle: std::ptr::null_mut(),
+            prev_obstacle: Default::default(),
             unit_dir: Default::default(),
-            id_: 0,
+            id_: Default::default(),
         }
     }
 }
 
-#[wasm_bindgen]
-#[derive(Clone, Default, Debug)]
-pub struct Vertices(Vec<Vector2>);
-
-#[wasm_bindgen]
-impl Vertices {
-    pub fn new() -> Self {
-        Self(Vec::new())
-    }
-    
-    pub fn add(&mut self, vertex: Vector2) {
-        self.0.push(vertex);
-    }
-
-    pub fn get(&self, index: usize) -> Vector2 {
-        self.0[index]
-    }
-
-    pub fn len(&self) -> usize {
-        self.0.len()
-    }
-}

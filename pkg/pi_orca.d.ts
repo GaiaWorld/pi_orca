@@ -1,6 +1,21 @@
 /* tslint:disable */
 /* eslint-disable */
 /**
+* @param {TileMap} map
+* @param {Vector2} start
+* @param {Vector2} end
+* @returns {boolean}
+*/
+export function test_line(map: TileMap, start: Vector2, end: Vector2): boolean;
+/**
+* @param {Vector2} a_min
+* @param {Vector2} a_max
+* @param {Vector2} b_min
+* @param {Vector2} b_max
+* @returns {boolean}
+*/
+export function aabb_intersects(a_min: Vector2, a_max: Vector2, b_min: Vector2, b_max: Vector2): boolean;
+/**
 */
 export enum TileObstacle {
   Right = 1,
@@ -123,19 +138,19 @@ export class Obstacle {
   static default(): Obstacle;
 /**
 */
-  id_: number;
+  id_: ID;
 /**
 */
   is_convex: boolean;
 /**
 */
-  next_obstacle: number;
+  next_obstacle: ID;
 /**
 */
   point_: Vector2;
 /**
 */
-  prev_obstacle: number;
+  prev_obstacle: ID;
 /**
 */
   unit_dir: Vector2;
@@ -145,12 +160,12 @@ export class Obstacle {
 export class RVOSimulator {
   free(): void;
 /**
-* @param {number} max_obstacle
+* @param {number} _max_obstacle
 * @returns {RVOSimulator}
 */
-  static default(max_obstacle: number): RVOSimulator;
+  static default(_max_obstacle: number): RVOSimulator;
 /**
-* @param {number} max_obstacle
+* @param {number} _max_obstacle
 * @param {number} time_step
 * @param {number} neighbor_dist
 * @param {number} max_neighbors
@@ -161,7 +176,7 @@ export class RVOSimulator {
 * @param {Vector2} velocity
 * @returns {RVOSimulator}
 */
-  static new(max_obstacle: number, time_step: number, neighbor_dist: number, max_neighbors: number, time_horizon: number, time_horizon_obst: number, radius: number, max_speed: number, velocity: Vector2): RVOSimulator;
+  static new(_max_obstacle: number, time_step: number, neighbor_dist: number, max_neighbors: number, time_horizon: number, time_horizon_obst: number, radius: number, max_speed: number, velocity: Vector2): RVOSimulator;
 /**
 * @param {Vector2} position
 * @returns {number}
@@ -180,6 +195,11 @@ export class RVOSimulator {
 */
   add_agent2(position: Vector2, neighbor_dist: number, max_neighbors: number, time_horizon: number, time_horizon_obst: number, radius: number, max_speed: number, velocity: Vector2): number;
 /**
+* @param {number} id
+* @returns {boolean}
+*/
+  remove_agent(id: number): boolean;
+/**
 *
 *     * @brief 为模拟添加新障碍。
 *     * @param[in] vertices 逆时针顺序排列的多边形障碍物的顶点列表。
@@ -191,125 +211,13 @@ export class RVOSimulator {
 */
   add_obstacle(vertices: Vertices): number;
 /**
+* @param {number} id
+* @returns {boolean}
+*/
+  remove_obstacle(id: number): boolean;
+/**
 */
   do_step(): void;
-/**
-* @param {number} agent_no
-* @param {number} neighbor_no
-* @returns {number}
-*/
-  get_agent_agent_neighbor(agent_no: number, neighbor_no: number): number;
-/**
-* @param {number} agent_no
-* @returns {number}
-*/
-  get_agent_max_neighbors(agent_no: number): number;
-/**
-* @param {number} agent_no
-* @returns {number}
-*/
-  get_agent_max_speed(agent_no: number): number;
-/**
-* @param {number} agent_no
-* @returns {number}
-*/
-  get_agent_neighbor_dist(agent_no: number): number;
-/**
-* @param {number} agent_no
-* @returns {number}
-*/
-  get_agent_num_agent_neighbors(agent_no: number): number;
-/**
-* @param {number} agent_no
-* @returns {number}
-*/
-  get_agent_num_obstacle_neighbors(agent_no: number): number;
-/**
-* @param {number} agent_no
-* @returns {number}
-*/
-  get_agent_num_orcalines(agent_no: number): number;
-/**
-* @param {number} agent_no
-* @param {number} neighbor_no
-* @returns {number}
-*/
-  get_agent_obstacle_neighbor(agent_no: number, neighbor_no: number): number;
-/**
-* @param {number} agent_no
-* @param {number} line_no
-* @returns {Line}
-*/
-  get_agent_orcaline(agent_no: number, line_no: number): Line;
-/**
-* @param {number} agent_no
-* @returns {Vector2}
-*/
-  get_agent_position(agent_no: number): Vector2;
-/**
-* @param {number} agent_no
-* @returns {Vector2}
-*/
-  get_agent_pref_velocity(agent_no: number): Vector2;
-/**
-* @param {number} agent_no
-* @returns {number}
-*/
-  get_agent_radius(agent_no: number): number;
-/**
-* @param {number} agent_no
-* @returns {number}
-*/
-  get_agent_time_horizon(agent_no: number): number;
-/**
-* @param {number} agent_no
-* @returns {number}
-*/
-  get_agent_time_horizon_obst(agent_no: number): number;
-/**
-* @param {number} agent_no
-* @returns {Vector2}
-*/
-  get_agent_velocity(agent_no: number): Vector2;
-/**
-* @returns {number}
-*/
-  get_global_time(): number;
-/**
-* @returns {number}
-*/
-  get_num_agents(): number;
-/**
-* @returns {number}
-*/
-  get_num_obstacle_vertices(): number;
-/**
-* @param {number} vertex_no
-* @returns {Vector2}
-*/
-  get_obstacle_vertex(vertex_no: number): Vector2;
-/**
-* @param {number} vertex_no
-* @returns {number}
-*/
-  get_next_obstacle_vertex_no(vertex_no: number): number;
-/**
-* @param {number} vertex_no
-* @returns {number}
-*/
-  get_prev_obstacle_vertex_no(vertex_no: number): number;
-/**
-* @returns {number}
-*/
-  get_time_step(): number;
-/**
-* @param {number} agent_no
-* @returns {number}
-*/
-  get_agents(agent_no: number): number;
-/**
-*/
-  static process_obstacles(): void;
 /**
 *
 *    * @brief     为添加的任何新代理设置默认属性。
@@ -340,49 +248,167 @@ export class RVOSimulator {
   set_agent_defaults(neighbor_dist: number, max_neighbors: number, time_horizon: number, time_horizon_obst: number, radius: number, max_speed: number, velocity: Vector2): void;
 /**
 * @param {number} agent_no
-* @param {number} max_neighbors
+* @param {number} neighbor_no
+* @returns {number | undefined}
 */
-  set_agent_max_neighbors(agent_no: number, max_neighbors: number): void;
+  get_agent_agent_neighbor(agent_no: number, neighbor_no: number): number | undefined;
+/**
+* @param {number} agent_no
+* @returns {number | undefined}
+*/
+  get_agent_max_neighbors(agent_no: number): number | undefined;
+/**
+* @param {number} agent_no
+* @returns {number | undefined}
+*/
+  get_agent_max_speed(agent_no: number): number | undefined;
+/**
+* @param {number} agent_no
+* @returns {number | undefined}
+*/
+  get_agent_neighbor_dist(agent_no: number): number | undefined;
+/**
+* @param {number} agent_no
+* @returns {number | undefined}
+*/
+  get_agent_num_agent_neighbors(agent_no: number): number | undefined;
+/**
+* @param {number} agent_no
+* @returns {number | undefined}
+*/
+  get_agent_num_obstacle_neighbors(agent_no: number): number | undefined;
+/**
+* @param {number} agent_no
+* @returns {number | undefined}
+*/
+  get_agent_num_orcalines(agent_no: number): number | undefined;
+/**
+* @param {number} agent_no
+* @param {number} neighbor_no
+* @returns {number | undefined}
+*/
+  get_agent_obstacle_neighbor(agent_no: number, neighbor_no: number): number | undefined;
+/**
+* @param {number} agent_no
+* @param {number} line_no
+* @returns {Line | undefined}
+*/
+  get_agent_orcaline(agent_no: number, line_no: number): Line | undefined;
+/**
+* @param {number} agent_no
+* @returns {Vector2 | undefined}
+*/
+  get_agent_position(agent_no: number): Vector2 | undefined;
+/**
+* @param {number} agent_no
+* @returns {Vector2 | undefined}
+*/
+  get_agent_pref_velocity(agent_no: number): Vector2 | undefined;
+/**
+* @param {number} agent_no
+* @returns {number | undefined}
+*/
+  get_agent_radius(agent_no: number): number | undefined;
+/**
+* @param {number} agent_no
+* @returns {number | undefined}
+*/
+  get_agent_time_horizon(agent_no: number): number | undefined;
+/**
+* @param {number} agent_no
+* @returns {number | undefined}
+*/
+  get_agent_time_horizon_obst(agent_no: number): number | undefined;
+/**
+* @param {number} agent_no
+* @returns {Vector2 | undefined}
+*/
+  get_agent_velocity(agent_no: number): Vector2 | undefined;
+/**
+* @returns {number}
+*/
+  get_global_time(): number;
+/**
+* @returns {number}
+*/
+  get_num_agents(): number;
+/**
+* @returns {number}
+*/
+  get_num_obstacle_vertices(): number;
+/**
+* @param {number} vertex_no
+* @returns {Vector2 | undefined}
+*/
+  get_obstacle_vertex(vertex_no: number): Vector2 | undefined;
+/**
+* @param {number} vertex_no
+* @returns {number | undefined}
+*/
+  get_next_obstacle_vertex_no(vertex_no: number): number | undefined;
+/**
+* @param {number} vertex_no
+* @returns {number | undefined}
+*/
+  get_prev_obstacle_vertex_no(vertex_no: number): number | undefined;
+/**
+* @returns {number}
+*/
+  get_time_step(): number;
+/**
+* @param {number} agent_no
+* @param {number} max_neighbors
+* @returns {boolean}
+*/
+  set_agent_max_neighbors(agent_no: number, max_neighbors: number): boolean;
 /**
 * @param {number} agent_no
 * @param {number} max_speed
+* @returns {boolean}
 */
-  set_agent_max_speed(agent_no: number, max_speed: number): void;
+  set_agent_max_speed(agent_no: number, max_speed: number): boolean;
 /**
 * @param {number} agent_no
 * @param {number} neighbor_dist
+* @returns {boolean}
 */
-  set_agent_neighbor_dist(agent_no: number, neighbor_dist: number): void;
+  set_agent_neighbor_dist(agent_no: number, neighbor_dist: number): boolean;
 /**
 * @param {number} agent_no
 * @param {Vector2} position
+* @returns {boolean}
 */
-  set_agent_position(agent_no: number, position: Vector2): void;
+  set_agent_position(agent_no: number, position: Vector2): boolean;
 /**
 * @param {number} agent_no
 * @param {Vector2} pref_velocity
+* @returns {boolean}
 */
-  set_agent_pref_velocity(agent_no: number, pref_velocity: Vector2): void;
+  set_agent_pref_velocity(agent_no: number, pref_velocity: Vector2): boolean;
 /**
 * @param {number} agent_no
 * @param {number} radius
+* @returns {boolean}
 */
-  set_agent_radius(agent_no: number, radius: number): void;
+  set_agent_radius(agent_no: number, radius: number): boolean;
 /**
 * @param {number} agent_no
 * @param {number} time_horizon
+* @returns {boolean}
 */
-  set_agent_time_horizon(agent_no: number, time_horizon: number): void;
+  set_agent_time_horizon(agent_no: number, time_horizon: number): boolean;
 /**
 * @param {number} agent_no
 * @param {number} time_horizon_obst
+* @returns {boolean}
 */
-  set_agent_time_horizon_obst(agent_no: number, time_horizon_obst: number): void;
+  set_agent_time_horizon_obst(agent_no: number, time_horizon_obst: number): boolean;
 /**
 * @param {number} agent_no
 * @param {Vector2} velocity
+* @returns {boolean}
 */
-  set_agent_velocity(agent_no: number, velocity: Vector2): void;
+  set_agent_velocity(agent_no: number, velocity: Vector2): boolean;
 /**
 * @param {number} time_step
 */
@@ -619,9 +645,6 @@ export interface InitOutput {
   readonly vector2_dist_sq_point_line_segment: (a: number, b: number, c: number) => number;
   readonly vector2_left_of: (a: number, b: number, c: number) => number;
   readonly vector2_sqr: (a: number) => number;
-  readonly __wbg_id_free: (a: number) => void;
-  readonly __wbg_get_id_0: (a: number) => number;
-  readonly __wbg_set_id_0: (a: number, b: number) => void;
   readonly __wbg_rvosimulator_free: (a: number) => void;
   readonly __wbg_get_rvosimulator_global_time: (a: number) => number;
   readonly __wbg_set_rvosimulator_global_time: (a: number, b: number) => void;
@@ -631,42 +654,42 @@ export interface InitOutput {
   readonly rvosimulator_new: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number) => number;
   readonly rvosimulator_add_agent: (a: number, b: number) => number;
   readonly rvosimulator_add_agent2: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number) => number;
+  readonly rvosimulator_remove_agent: (a: number, b: number) => number;
   readonly rvosimulator_add_obstacle: (a: number, b: number) => number;
+  readonly rvosimulator_remove_obstacle: (a: number, b: number) => number;
   readonly rvosimulator_do_step: (a: number) => void;
-  readonly rvosimulator_get_agent_agent_neighbor: (a: number, b: number, c: number) => number;
-  readonly rvosimulator_get_agent_max_neighbors: (a: number, b: number) => number;
-  readonly rvosimulator_get_agent_max_speed: (a: number, b: number) => number;
-  readonly rvosimulator_get_agent_neighbor_dist: (a: number, b: number) => number;
-  readonly rvosimulator_get_agent_num_agent_neighbors: (a: number, b: number) => number;
-  readonly rvosimulator_get_agent_num_obstacle_neighbors: (a: number, b: number) => number;
-  readonly rvosimulator_get_agent_num_orcalines: (a: number, b: number) => number;
-  readonly rvosimulator_get_agent_obstacle_neighbor: (a: number, b: number, c: number) => number;
+  readonly rvosimulator_set_agent_defaults: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number) => void;
+  readonly rvosimulator_get_agent_agent_neighbor: (a: number, b: number, c: number, d: number) => void;
+  readonly rvosimulator_get_agent_max_neighbors: (a: number, b: number, c: number) => void;
+  readonly rvosimulator_get_agent_max_speed: (a: number, b: number, c: number) => void;
+  readonly rvosimulator_get_agent_neighbor_dist: (a: number, b: number, c: number) => void;
+  readonly rvosimulator_get_agent_num_agent_neighbors: (a: number, b: number, c: number) => void;
+  readonly rvosimulator_get_agent_num_obstacle_neighbors: (a: number, b: number, c: number) => void;
+  readonly rvosimulator_get_agent_num_orcalines: (a: number, b: number, c: number) => void;
+  readonly rvosimulator_get_agent_obstacle_neighbor: (a: number, b: number, c: number, d: number) => void;
   readonly rvosimulator_get_agent_orcaline: (a: number, b: number, c: number) => number;
   readonly rvosimulator_get_agent_position: (a: number, b: number) => number;
   readonly rvosimulator_get_agent_pref_velocity: (a: number, b: number) => number;
-  readonly rvosimulator_get_agent_radius: (a: number, b: number) => number;
-  readonly rvosimulator_get_agent_time_horizon: (a: number, b: number) => number;
-  readonly rvosimulator_get_agent_time_horizon_obst: (a: number, b: number) => number;
+  readonly rvosimulator_get_agent_radius: (a: number, b: number, c: number) => void;
+  readonly rvosimulator_get_agent_time_horizon: (a: number, b: number, c: number) => void;
+  readonly rvosimulator_get_agent_time_horizon_obst: (a: number, b: number, c: number) => void;
   readonly rvosimulator_get_agent_velocity: (a: number, b: number) => number;
   readonly rvosimulator_get_global_time: (a: number) => number;
   readonly rvosimulator_get_num_agents: (a: number) => number;
   readonly rvosimulator_get_num_obstacle_vertices: (a: number) => number;
   readonly rvosimulator_get_obstacle_vertex: (a: number, b: number) => number;
-  readonly rvosimulator_get_next_obstacle_vertex_no: (a: number, b: number) => number;
-  readonly rvosimulator_get_prev_obstacle_vertex_no: (a: number, b: number) => number;
+  readonly rvosimulator_get_next_obstacle_vertex_no: (a: number, b: number, c: number) => void;
+  readonly rvosimulator_get_prev_obstacle_vertex_no: (a: number, b: number, c: number) => void;
   readonly rvosimulator_get_time_step: (a: number) => number;
-  readonly rvosimulator_get_agents: (a: number, b: number) => number;
-  readonly rvosimulator_process_obstacles: () => void;
-  readonly rvosimulator_set_agent_defaults: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number) => void;
-  readonly rvosimulator_set_agent_max_neighbors: (a: number, b: number, c: number) => void;
-  readonly rvosimulator_set_agent_max_speed: (a: number, b: number, c: number) => void;
-  readonly rvosimulator_set_agent_neighbor_dist: (a: number, b: number, c: number) => void;
-  readonly rvosimulator_set_agent_position: (a: number, b: number, c: number) => void;
-  readonly rvosimulator_set_agent_pref_velocity: (a: number, b: number, c: number) => void;
-  readonly rvosimulator_set_agent_radius: (a: number, b: number, c: number) => void;
-  readonly rvosimulator_set_agent_time_horizon: (a: number, b: number, c: number) => void;
-  readonly rvosimulator_set_agent_time_horizon_obst: (a: number, b: number, c: number) => void;
-  readonly rvosimulator_set_agent_velocity: (a: number, b: number, c: number) => void;
+  readonly rvosimulator_set_agent_max_neighbors: (a: number, b: number, c: number) => number;
+  readonly rvosimulator_set_agent_max_speed: (a: number, b: number, c: number) => number;
+  readonly rvosimulator_set_agent_neighbor_dist: (a: number, b: number, c: number) => number;
+  readonly rvosimulator_set_agent_position: (a: number, b: number, c: number) => number;
+  readonly rvosimulator_set_agent_pref_velocity: (a: number, b: number, c: number) => number;
+  readonly rvosimulator_set_agent_radius: (a: number, b: number, c: number) => number;
+  readonly rvosimulator_set_agent_time_horizon: (a: number, b: number, c: number) => number;
+  readonly rvosimulator_set_agent_time_horizon_obst: (a: number, b: number, c: number) => number;
+  readonly rvosimulator_set_agent_velocity: (a: number, b: number, c: number) => number;
   readonly rvosimulator_set_time_step: (a: number, b: number) => void;
   readonly __wbg_obstacle_free: (a: number) => void;
   readonly __wbg_get_obstacle_is_convex: (a: number) => number;
@@ -682,11 +705,6 @@ export interface InitOutput {
   readonly __wbg_get_obstacle_id_: (a: number) => number;
   readonly __wbg_set_obstacle_id_: (a: number, b: number) => void;
   readonly obstacle_default: () => number;
-  readonly __wbg_vertices_free: (a: number) => void;
-  readonly vertices_new: () => number;
-  readonly vertices_add: (a: number, b: number) => void;
-  readonly vertices_get: (a: number, b: number) => number;
-  readonly vertices_len: (a: number) => number;
   readonly __wbg_nodeindex_free: (a: number) => void;
   readonly nodeindex_new: (a: number) => number;
   readonly nodeindex_index: (a: number) => number;
@@ -699,6 +717,17 @@ export interface InitOutput {
   readonly astar_new: (a: number, b: number, c: number) => number;
   readonly astar_find_path: (a: number, b: number, c: number, d: number, e: number) => number;
   readonly astar_result: (a: number, b: number, c: number) => number;
+  readonly test_line: (a: number, b: number, c: number) => number;
+  readonly aabb_intersects: (a: number, b: number, c: number, d: number) => number;
+  readonly __wbg_vertices_free: (a: number) => void;
+  readonly vertices_new: () => number;
+  readonly vertices_add: (a: number, b: number) => void;
+  readonly vertices_get: (a: number, b: number) => number;
+  readonly vertices_len: (a: number) => number;
+  readonly __wbg_id_free: (a: number) => void;
+  readonly __wbg_get_id_0: (a: number) => number;
+  readonly __wbg_set_id_0: (a: number, b: number) => void;
+  readonly __wbindgen_add_to_stack_pointer: (a: number) => number;
 }
 
 export type SyncInitInput = BufferSource | WebAssembly.Module;

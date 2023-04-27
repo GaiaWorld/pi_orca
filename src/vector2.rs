@@ -146,7 +146,6 @@ impl Mul for Vector2 {
     type Output = f32;
 
     fn mul(self, rhs: Self) -> f32 {
-        // println!("mul: {}", self.x * rhs.x + self.y + rhs.y);
         return self.x * rhs.x + self.y * rhs.y;
     }
 }
@@ -164,8 +163,6 @@ impl Mul<f32> for Vector2 {
     type Output = Self;
 
     fn mul(self, rhs: f32) -> Self {
-        // println!("mul x: {}, y: {}", self.x * rhs, self.y * rhs);
-        // println!("mul y: {}", );
         return Vector2::new(self.x * rhs, self.y * rhs);
     }
 }
