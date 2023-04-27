@@ -1,30 +1,13 @@
 use nalgebra::Point2;
 use parry2d::bounding_volume::Aabb as AABB;
 
-use wasm_bindgen::prelude::wasm_bindgen;
-
 use crate::{
     obstacle::Obstacle,
     rvos_imulator::RVOSimulator,
-    util::ID,
+    util::{ID, Line},
     vector2::{Vector2, RVO_EPSILON},
 };
 
-#[wasm_bindgen]
-#[derive(Default, Clone, Copy, Debug)]
-pub struct Line {
-    /**
-     * \brief     A point on the directed line.
-     */
-    pub point: Vector2,
-
-    /**
-     * \brief     The direction of the directed line.
-     */
-    pub direction: Vector2,
-}
-
-#[wasm_bindgen]
 #[derive(Clone)]
 pub struct Agent {
     agent_neighbors: Vec<(f32, *const Agent)>,

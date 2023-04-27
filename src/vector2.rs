@@ -1,5 +1,4 @@
 use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
-
 use wasm_bindgen::prelude::wasm_bindgen;
 
 pub const RVO_EPSILON: f32 = 0.00001;

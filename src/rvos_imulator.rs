@@ -1,7 +1,7 @@
 use crate::{
-    agent::{Agent, Line},
+    agent::Agent,
     obstacle::Obstacle,
-    util::{ab_query_func, intersects, AbQueryArgs, Vertices, ID},
+    util::{ab_query_func, intersects, AbQueryArgs, Line, Vertices, ID},
     vector2::Vector2,
 };
 
@@ -12,7 +12,6 @@ use pi_spatial::{tilemap::TileMap, QuadHelper, QuadTree, Tree};
 use wasm_bindgen::prelude::wasm_bindgen;
 
 #[wasm_bindgen]
-// #[derive(Clone)]
 pub struct RVOSimulator {
     agents_: SlotMap<ID, Agent>,
     default_agent: Option<Agent>,
@@ -402,13 +401,6 @@ impl RVOSimulator {
         None
     }
 
-    pub fn get_agent_orcaline(&self, agent_no: f64, line_no: usize) -> Option<Line> {
-        if let Some(v) = self.agents_.get(ID(agent_no)) {
-            return Some(v.get_agent_orcaline(line_no));
-        }
-        None
-    }
-
     pub fn get_agent_position(&self, agent_no: f64) -> Option<Vector2> {
         if let Some(v) = self.agents_.get(ID(agent_no)) {
             return Some(v.position_);
@@ -621,6 +613,13 @@ impl RVOSimulator {
     pub fn get_agent(&mut self, agent_no: ID) -> Option<*const Agent> {
         if let Some(v) = self.agents_.get(agent_no) {
             return Some(v);
+        }
+        None
+    }
+
+    pub fn get_agent_orcaline(&self, agent_no: f64, line_no: usize) -> Option<Line> {
+        if let Some(v) = self.agents_.get(ID(agent_no)) {
+            return Some(v.get_agent_orcaline(line_no));
         }
         None
     }

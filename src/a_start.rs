@@ -1,13 +1,13 @@
-use std::iter::Rev;
-use std::vec::IntoIter;
-
+use crate::vector2::Vector2;
 use pi_path_finding::{
     make_neighbors, AStar as AStarInner, PathFilterIter as PathFilterIterInner, PathSmoothIter,
 };
 use pi_path_finding::{Entry, NodeIndex as NodeIndexInner, TileMap as TileMapInner};
-use wasm_bindgen::prelude::wasm_bindgen;
+use std::iter::Rev;
+use std::vec::IntoIter;
 
-use crate::vector2::Vector2;
+#[cfg(target_os = "wasm32")]
+use wasm_bindgen::prelude::wasm_bindgen;
 
 // 瓦片内的障碍
 #[wasm_bindgen]

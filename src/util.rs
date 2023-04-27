@@ -6,11 +6,6 @@ use pi_slotmap::{Key, KeyData};
 use std::hash::Hasher;
 use wasm_bindgen::prelude::wasm_bindgen;
 
-#[wasm_bindgen]
-pub fn aabb_intersects(a_min: &Vector2, a_max: &Vector2, b_min: &Vector2, b_max: &Vector2) -> bool {
-    a_min.x <= b_max.x && a_max.x > b_min.x && a_min.y <= b_max.y && a_max.y > b_min.y
-}
-
 /// quad节点查询函数的范本，aabb是否相交，参数a是查询参数，参数b是quad节点的aabb， 所以最常用的判断是左闭右开
 /// 应用方为了功能和性能，应该实现自己需要的quad节点的查询函数， 比如点查询， 球查询， 视锥体查询...
 pub fn intersects(a: &AABB, b: &AABB) -> bool {
@@ -38,6 +33,19 @@ pub fn ab_query_func(arg: &mut AbQueryArgs, id: ID, aabb: &AABB, bind: &Vertices
     if intersects(&arg.aabb, aabb) {
         arg.result.push((id, bind.clone()));
     }
+}
+
+#[derive(Default, Clone, Copy, Debug)]
+pub struct Line {
+    /**
+     * \brief     A point on the directed line.
+     */
+    pub point: Vector2,
+
+    /**
+     * \brief     The direction of the directed line.
+     */
+    pub direction: Vector2,
 }
 
 #[wasm_bindgen]

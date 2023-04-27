@@ -1,12 +1,7 @@
-extern crate wasm_bindgen;
 
+// pub mod a_start;
 pub mod agent;
-pub mod vector2;
-pub mod rvos_imulator;
 pub mod obstacle;
-pub mod a_start;
+pub mod rvos_imulator;
 pub mod util;
-
-
-
-    
+pub mod vector2;

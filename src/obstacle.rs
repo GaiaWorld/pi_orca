@@ -2,7 +2,6 @@ use wasm_bindgen::prelude::wasm_bindgen;
 
 use crate::{util::ID, vector2::Vector2};
 
-#[wasm_bindgen]
 #[derive(Clone, Copy, Debug)]
 pub struct Obstacle {
     pub is_convex: bool,
@@ -13,7 +12,6 @@ pub struct Obstacle {
     pub id_: ID,
 }
 
-#[wasm_bindgen]
 impl Obstacle {
     pub fn default() -> Self {
         Self {

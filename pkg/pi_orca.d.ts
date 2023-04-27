@@ -1,159 +1,12 @@
 /* tslint:disable */
 /* eslint-disable */
 /**
-* @param {TileMap} map
-* @param {Vector2} start
-* @param {Vector2} end
-* @returns {boolean}
-*/
-export function test_line(map: TileMap, start: Vector2, end: Vector2): boolean;
-/**
-* @param {Vector2} a_min
-* @param {Vector2} a_max
-* @param {Vector2} b_min
-* @param {Vector2} b_max
-* @returns {boolean}
-*/
-export function aabb_intersects(a_min: Vector2, a_max: Vector2, b_min: Vector2, b_max: Vector2): boolean;
-/**
-*/
-export enum TileObstacle {
-  Right = 1,
-  Down = 2,
-  Center = 4,
-}
-/**
-*/
-export class AStar {
-  free(): void;
-/**
-* @param {number} row
-* @param {number} column
-* @param {number} node_number
-* @returns {AStar}
-*/
-  static new(row: number, column: number, node_number: number): AStar;
-/**
-* @param {TileMap} tile_map
-* @param {number} max_number
-* @param {NodeIndex} start
-* @param {NodeIndex} end
-* @returns {NodeIndex | undefined}
-*/
-  find_path(tile_map: TileMap, max_number: number, start: NodeIndex, end: NodeIndex): NodeIndex | undefined;
-/**
-* @param {NodeIndex} node
-* @param {TileMap} tile_map
-* @returns {ResultPath}
-*/
-  result(node: NodeIndex, tile_map: TileMap): ResultPath;
-}
-/**
-*/
-export class Agent {
-  free(): void;
-/**
-*/
-  id_: ID;
-/**
-*/
-  max_neighbors: number;
-/**
-*/
-  max_speed: number;
-/**
-*/
-  neighbor_dist: number;
-/**
-*/
-  new_velocity: Vector2;
-/**
-*/
-  position_: Vector2;
-/**
-*/
-  pref_velocity: Vector2;
-/**
-*/
-  radius_: number;
-/**
-*/
-  sim_: number;
-/**
-*/
-  time_horizon: number;
-/**
-*/
-  time_horizon_obst: number;
-/**
-*/
-  velocity_: Vector2;
-}
-/**
 */
 export class ID {
   free(): void;
 /**
 */
   0: number;
-}
-/**
-*/
-export class Line {
-  free(): void;
-/**
-*
-*     * \brief     The direction of the directed line.
-*     
-*/
-  direction: Vector2;
-/**
-*
-*     * \brief     A point on the directed line.
-*     
-*/
-  point: Vector2;
-}
-/**
-*/
-export class NodeIndex {
-  free(): void;
-/**
-* @param {number} index
-* @returns {NodeIndex}
-*/
-  static new(index: number): NodeIndex;
-/**
-* @returns {number}
-*/
-  index(): number;
-}
-/**
-*/
-export class Obstacle {
-  free(): void;
-/**
-* @returns {Obstacle}
-*/
-  static default(): Obstacle;
-/**
-*/
-  id_: ID;
-/**
-*/
-  is_convex: boolean;
-/**
-*/
-  next_obstacle: ID;
-/**
-*/
-  point_: Vector2;
-/**
-*/
-  prev_obstacle: ID;
-/**
-*/
-  unit_dir: Vector2;
 }
 /**
 */
@@ -290,12 +143,6 @@ export class RVOSimulator {
   get_agent_obstacle_neighbor(agent_no: number, neighbor_no: number): number | undefined;
 /**
 * @param {number} agent_no
-* @param {number} line_no
-* @returns {Line | undefined}
-*/
-  get_agent_orcaline(agent_no: number, line_no: number): Line | undefined;
-/**
-* @param {number} agent_no
 * @returns {Vector2 | undefined}
 */
   get_agent_position(agent_no: number): Vector2 | undefined;
@@ -419,31 +266,6 @@ export class RVOSimulator {
 /**
 */
   time_step: number;
-}
-/**
-*/
-export class ResultPath {
-  free(): void;
-/**
-* @returns {Vector2 | undefined}
-*/
-  next(): Vector2 | undefined;
-}
-/**
-*/
-export class TileMap {
-  free(): void;
-/**
-* @param {number} row
-* @param {number} column
-* @returns {TileMap}
-*/
-  static new(row: number, column: number): TileMap;
-/**
-* @param {NodeIndex} index
-* @param {number} obstacle
-*/
-  set_obstacle(index: NodeIndex, obstacle: number): void;
 }
 /**
 */
@@ -593,58 +415,6 @@ export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembl
 
 export interface InitOutput {
   readonly memory: WebAssembly.Memory;
-  readonly __wbg_line_free: (a: number) => void;
-  readonly __wbg_get_line_point: (a: number) => number;
-  readonly __wbg_set_line_point: (a: number, b: number) => void;
-  readonly __wbg_get_line_direction: (a: number) => number;
-  readonly __wbg_set_line_direction: (a: number, b: number) => void;
-  readonly __wbg_agent_free: (a: number) => void;
-  readonly __wbg_get_agent_max_neighbors: (a: number) => number;
-  readonly __wbg_set_agent_max_neighbors: (a: number, b: number) => void;
-  readonly __wbg_get_agent_max_speed: (a: number) => number;
-  readonly __wbg_set_agent_max_speed: (a: number, b: number) => void;
-  readonly __wbg_get_agent_neighbor_dist: (a: number) => number;
-  readonly __wbg_set_agent_neighbor_dist: (a: number, b: number) => void;
-  readonly __wbg_get_agent_new_velocity: (a: number) => number;
-  readonly __wbg_set_agent_new_velocity: (a: number, b: number) => void;
-  readonly __wbg_get_agent_position_: (a: number) => number;
-  readonly __wbg_set_agent_position_: (a: number, b: number) => void;
-  readonly __wbg_get_agent_pref_velocity: (a: number) => number;
-  readonly __wbg_set_agent_pref_velocity: (a: number, b: number) => void;
-  readonly __wbg_get_agent_radius_: (a: number) => number;
-  readonly __wbg_set_agent_radius_: (a: number, b: number) => void;
-  readonly __wbg_get_agent_sim_: (a: number) => number;
-  readonly __wbg_set_agent_sim_: (a: number, b: number) => void;
-  readonly __wbg_get_agent_time_horizon: (a: number) => number;
-  readonly __wbg_set_agent_time_horizon: (a: number, b: number) => void;
-  readonly __wbg_get_agent_time_horizon_obst: (a: number) => number;
-  readonly __wbg_set_agent_time_horizon_obst: (a: number, b: number) => void;
-  readonly __wbg_get_agent_velocity_: (a: number) => number;
-  readonly __wbg_set_agent_velocity_: (a: number, b: number) => void;
-  readonly __wbg_get_agent_id_: (a: number) => number;
-  readonly __wbg_set_agent_id_: (a: number, b: number) => void;
-  readonly __wbg_vector2_free: (a: number) => void;
-  readonly __wbg_get_vector2_x: (a: number) => number;
-  readonly __wbg_set_vector2_x: (a: number, b: number) => void;
-  readonly __wbg_get_vector2_y: (a: number) => number;
-  readonly __wbg_set_vector2_y: (a: number, b: number) => void;
-  readonly vector2_default: () => number;
-  readonly vector2_new: (a: number, b: number) => number;
-  readonly vector2_x: (a: number) => number;
-  readonly vector2_y: (a: number) => number;
-  readonly vector2_add: (a: number, b: number) => number;
-  readonly vector2_sub: (a: number, b: number) => number;
-  readonly vector2_mul: (a: number, b: number) => number;
-  readonly vector2_mul_number: (a: number, b: number) => number;
-  readonly vector2_div: (a: number, b: number) => number;
-  readonly vector2_neg: (a: number) => number;
-  readonly vector2_abs: (a: number) => number;
-  readonly vector2_abs_sq: (a: number) => number;
-  readonly vector2_det: (a: number, b: number) => number;
-  readonly vector2_normalize: (a: number) => number;
-  readonly vector2_dist_sq_point_line_segment: (a: number, b: number, c: number) => number;
-  readonly vector2_left_of: (a: number, b: number, c: number) => number;
-  readonly vector2_sqr: (a: number) => number;
   readonly __wbg_rvosimulator_free: (a: number) => void;
   readonly __wbg_get_rvosimulator_global_time: (a: number) => number;
   readonly __wbg_set_rvosimulator_global_time: (a: number, b: number) => void;
@@ -667,7 +437,6 @@ export interface InitOutput {
   readonly rvosimulator_get_agent_num_obstacle_neighbors: (a: number, b: number, c: number) => void;
   readonly rvosimulator_get_agent_num_orcalines: (a: number, b: number, c: number) => void;
   readonly rvosimulator_get_agent_obstacle_neighbor: (a: number, b: number, c: number, d: number) => void;
-  readonly rvosimulator_get_agent_orcaline: (a: number, b: number, c: number) => number;
   readonly rvosimulator_get_agent_position: (a: number, b: number) => number;
   readonly rvosimulator_get_agent_pref_velocity: (a: number, b: number) => number;
   readonly rvosimulator_get_agent_radius: (a: number, b: number, c: number) => void;
@@ -691,34 +460,6 @@ export interface InitOutput {
   readonly rvosimulator_set_agent_time_horizon_obst: (a: number, b: number, c: number) => number;
   readonly rvosimulator_set_agent_velocity: (a: number, b: number, c: number) => number;
   readonly rvosimulator_set_time_step: (a: number, b: number) => void;
-  readonly __wbg_obstacle_free: (a: number) => void;
-  readonly __wbg_get_obstacle_is_convex: (a: number) => number;
-  readonly __wbg_set_obstacle_is_convex: (a: number, b: number) => void;
-  readonly __wbg_get_obstacle_next_obstacle: (a: number) => number;
-  readonly __wbg_set_obstacle_next_obstacle: (a: number, b: number) => void;
-  readonly __wbg_get_obstacle_point_: (a: number) => number;
-  readonly __wbg_set_obstacle_point_: (a: number, b: number) => void;
-  readonly __wbg_get_obstacle_prev_obstacle: (a: number) => number;
-  readonly __wbg_set_obstacle_prev_obstacle: (a: number, b: number) => void;
-  readonly __wbg_get_obstacle_unit_dir: (a: number) => number;
-  readonly __wbg_set_obstacle_unit_dir: (a: number, b: number) => void;
-  readonly __wbg_get_obstacle_id_: (a: number) => number;
-  readonly __wbg_set_obstacle_id_: (a: number, b: number) => void;
-  readonly obstacle_default: () => number;
-  readonly __wbg_nodeindex_free: (a: number) => void;
-  readonly nodeindex_new: (a: number) => number;
-  readonly nodeindex_index: (a: number) => number;
-  readonly __wbg_tilemap_free: (a: number) => void;
-  readonly __wbg_resultpath_free: (a: number) => void;
-  readonly resultpath_next: (a: number) => number;
-  readonly tilemap_new: (a: number, b: number) => number;
-  readonly tilemap_set_obstacle: (a: number, b: number, c: number) => void;
-  readonly __wbg_astar_free: (a: number) => void;
-  readonly astar_new: (a: number, b: number, c: number) => number;
-  readonly astar_find_path: (a: number, b: number, c: number, d: number, e: number) => number;
-  readonly astar_result: (a: number, b: number, c: number) => number;
-  readonly test_line: (a: number, b: number, c: number) => number;
-  readonly aabb_intersects: (a: number, b: number, c: number, d: number) => number;
   readonly __wbg_vertices_free: (a: number) => void;
   readonly vertices_new: () => number;
   readonly vertices_add: (a: number, b: number) => void;
@@ -727,6 +468,28 @@ export interface InitOutput {
   readonly __wbg_id_free: (a: number) => void;
   readonly __wbg_get_id_0: (a: number) => number;
   readonly __wbg_set_id_0: (a: number, b: number) => void;
+  readonly __wbg_vector2_free: (a: number) => void;
+  readonly __wbg_get_vector2_x: (a: number) => number;
+  readonly __wbg_set_vector2_x: (a: number, b: number) => void;
+  readonly __wbg_get_vector2_y: (a: number) => number;
+  readonly __wbg_set_vector2_y: (a: number, b: number) => void;
+  readonly vector2_default: () => number;
+  readonly vector2_new: (a: number, b: number) => number;
+  readonly vector2_x: (a: number) => number;
+  readonly vector2_y: (a: number) => number;
+  readonly vector2_add: (a: number, b: number) => number;
+  readonly vector2_sub: (a: number, b: number) => number;
+  readonly vector2_mul: (a: number, b: number) => number;
+  readonly vector2_mul_number: (a: number, b: number) => number;
+  readonly vector2_div: (a: number, b: number) => number;
+  readonly vector2_neg: (a: number) => number;
+  readonly vector2_abs: (a: number) => number;
+  readonly vector2_abs_sq: (a: number) => number;
+  readonly vector2_det: (a: number, b: number) => number;
+  readonly vector2_normalize: (a: number) => number;
+  readonly vector2_dist_sq_point_line_segment: (a: number, b: number, c: number) => number;
+  readonly vector2_left_of: (a: number, b: number, c: number) => number;
+  readonly vector2_sqr: (a: number) => number;
   readonly __wbindgen_add_to_stack_pointer: (a: number) => number;
 }
 
