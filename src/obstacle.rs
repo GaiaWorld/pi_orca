@@ -1,5 +1,3 @@
-use wasm_bindgen::prelude::wasm_bindgen;
-
 use crate::{util::ID, vector2::Vector2};
 
 #[derive(Clone, Copy, Debug)]

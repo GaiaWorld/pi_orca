@@ -19,7 +19,7 @@ pub struct RVOSimulator {
     obstacles_: SlotMap<ID, Obstacle>,
     pub time_step: f32,
     tile_map: TileMap<ID, i32>,
-    obstacles_map: Tree<ID, QuadHelper, Vertices, 4>,
+    obstacles_map: QuadTree<ID, Vertices>,
 }
 
 #[wasm_bindgen]

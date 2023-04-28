@@ -250,24 +250,10 @@ version = "0.1.0"
 dependencies = [
  "nalgebra",
  "parry2d",
- "pi_path_finding",
  "pi_slotmap",
  "pi_spatial",
  "rand",
  "wasm-bindgen",
-]
-
-[[package]]
-name = "pi_path_finding"
-version = "0.3.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "746a92228fb6ff3eb482b6832d601e24646c10e3c220d8c0ff6229efe9acaedc"
-dependencies = [
- "nalgebra",
- "num-derive",
- "num-traits",
- "pi_null",
- "pi_spatial",
 ]
 
 [[package]]
