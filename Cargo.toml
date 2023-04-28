@@ -1,7 +1,11 @@
 [package]
 name = "pi_orca"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
+description = "A* Path Finding Algorithm"
+repository = "https://github.com/GaiaWorld/pi_orca.git"
+license = "MIT OR Apache-2.0"
+keywords = ["orca", "orca2", "pi_orca"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
