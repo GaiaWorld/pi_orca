@@ -559,6 +559,14 @@ impl RVOSimulator {
     pub fn set_time_step(&mut self, time_step: f32) {
         self.time_step = time_step;
     }
+
+    pub fn set_agent_ststic(&mut self, agent_no: f64, is_static: bool) -> bool {
+        if let Some(agent) = self.agents_.get_mut(ID(agent_no)) {
+            agent.is_static = is_static;
+            return true;
+        }
+        false
+    }
 }
 
 impl RVOSimulator {

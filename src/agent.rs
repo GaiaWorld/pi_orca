@@ -24,7 +24,7 @@ pub struct Agent {
     pub time_horizon: f32,
     pub time_horizon_obst: f32,
     pub velocity_: Vector2,
-
+    pub is_static: bool,
     pub id_: ID,
 }
 
@@ -46,6 +46,7 @@ impl Agent {
             time_horizon_obst: 0.0,
             velocity_: Vector2::default(),
             id_: ID::default(),
+            is_static: false,
         }
     }
 
@@ -92,6 +93,10 @@ impl Agent {
 
             for id in ids {
                 let agent = unsafe { &*sim.get_agent(id).unwrap() };
+                // 当代理邻居和自己都是静态的时候，忽略这个代理；邻居
+                if self.is_static && agent.is_static {
+                    continue;
+                }
                 self.insert_agent_neighbor(agent, &mut _range_sq);
             }
         }
