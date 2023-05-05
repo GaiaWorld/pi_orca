@@ -398,7 +398,7 @@ impl Agent {
             }
             // println!("other.orca_lines: {:?}", other.orca_lines);
         }
-        println!("orca_lines: {:?}", self.orca_lines);
+        // println!("orca_lines: {:?}", self.orca_lines);
 
         let line_fail = Self::linear_program2(
             &self.orca_lines,
