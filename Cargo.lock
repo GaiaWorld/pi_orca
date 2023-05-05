@@ -93,10 +93,11 @@ dependencies = [
 
 [[package]]
 name = "matrixmultiply"
-version = "0.3.3"
+version = "0.3.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bb99c395ae250e1bf9133673f03ca9f97b7e71b705436bf8f089453445d1e9fe"
+checksum = "090126dc04f95dc0d1c1c91f61bdd474b3930ca064c1edc8a849da2c6cbe1e77"
 dependencies = [
+ "autocfg",
  "rawpointer",
 ]
 
@@ -246,7 +247,7 @@ checksum = "eb24378a9838a3f29b4c10efbe9b807bbb90c533a776f295268bdc972ddebbf9"
 
 [[package]]
 name = "pi_orca"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "nalgebra",
  "parry2d",
@@ -267,9 +268,9 @@ dependencies = [
 
 [[package]]
 name = "pi_spatial"
-version = "0.4.1"
+version = "0.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3f19b0d13a6a890432ff58b3c3d426ac8232d8c206d52e8605de55b9451d5cd0"
+checksum = "abde765c553e7c892d2e8733469bafc2542701c9348e9f2d95aedaaad55c7f5b"
 dependencies = [
  "nalgebra",
  "num-traits",
@@ -277,6 +278,7 @@ dependencies = [
  "parry3d",
  "pi_null",
  "pi_slotmap",
+ "wasm-bindgen",
 ]
 
 [[package]]

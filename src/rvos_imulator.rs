@@ -8,7 +8,7 @@ use crate::{
 use nalgebra::Point2;
 use parry2d::bounding_volume::Aabb as AABB;
 use pi_slotmap::SlotMap;
-use pi_spatial::{tilemap::TileMap, QuadHelper, QuadTree, Tree};
+use pi_spatial::{tilemap::TileMap, quad_helper::QuadTree};
 use wasm_bindgen::prelude::wasm_bindgen;
 
 #[wasm_bindgen]
@@ -559,14 +559,6 @@ impl RVOSimulator {
     pub fn set_time_step(&mut self, time_step: f32) {
         self.time_step = time_step;
     }
-
-    pub fn set_agent_ststic(&mut self, agent_no: f64, is_static: bool) -> bool {
-        if let Some(agent) = self.agents_.get_mut(ID(agent_no)) {
-            agent.is_static = is_static;
-            return true;
-        }
-        false
-    }
 }
 
 impl RVOSimulator {
@@ -618,8 +610,8 @@ impl RVOSimulator {
         None
     }
 
-    pub fn get_agent(&mut self, agent_no: ID) -> Option<*const Agent> {
-        if let Some(v) = self.agents_.get(agent_no) {
+    pub fn get_agent(&mut self, agent_no: ID) -> Option<*mut Agent> {
+        if let Some(v) = self.agents_.get_mut(agent_no) {
             return Some(v);
         }
         None

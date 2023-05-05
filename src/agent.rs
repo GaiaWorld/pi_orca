@@ -4,13 +4,13 @@ use parry2d::bounding_volume::Aabb as AABB;
 use crate::{
     obstacle::Obstacle,
     rvos_imulator::RVOSimulator,
-    util::{ID, Line},
+    util::{Line, ID},
     vector2::{Vector2, RVO_EPSILON},
 };
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Agent {
-    agent_neighbors: Vec<(f32, *const Agent)>,
+    agent_neighbors: Vec<(f32, *mut Agent)>,
     pub max_neighbors: usize,
     pub max_speed: f32,
     pub neighbor_dist: f32,
@@ -25,6 +25,7 @@ pub struct Agent {
     pub time_horizon_obst: f32,
     pub velocity_: Vector2,
     pub is_static: bool,
+    is_computed: bool,
     pub id_: ID,
 }
 
@@ -46,6 +47,7 @@ impl Agent {
             time_horizon_obst: 0.0,
             velocity_: Vector2::default(),
             id_: ID::default(),
+            is_computed: false,
             is_static: false,
         }
     }
@@ -92,11 +94,15 @@ impl Agent {
             // println!("agent{}: have {} neighbors", self.id_.0, ids.len());
 
             for id in ids {
-                let agent = unsafe { &*sim.get_agent(id).unwrap() };
+                let agent = unsafe { &mut *sim.get_agent(id).unwrap() };
                 // 当代理邻居和自己都是静态的时候，忽略这个代理；邻居
                 if self.is_static && agent.is_static {
                     continue;
                 }
+
+                // if agent.is_computed{
+                //     continue;
+                // }
                 self.insert_agent_neighbor(agent, &mut _range_sq);
             }
         }
@@ -106,7 +112,7 @@ impl Agent {
     pub fn compute_new_velocity(&mut self) {
         let sim = unsafe { &*self.sim_ };
 
-        self.orca_lines.clear();
+        
         let inv_time_horizon_obst = 1.0 / self.time_horizon_obst;
 
         // 计算障碍 ORCA 线
@@ -256,7 +262,6 @@ impl Agent {
 
             // 当凸顶点时，leg永远不能指向相邻边，取而代之的是相邻边的截止线。
             // 如果速度投射在“外”leg上，则不添加任何约束。
-            // println!("obstacle1.prev_obstacle: {}", obstacle1.prev_obstacle);
             let left_neighbor = unsafe { &*sim.get_obstacle(obstacle1.prev_obstacle).unwrap() };
 
             let mut is_left_leg_foreign = false;
@@ -266,7 +271,6 @@ impl Agent {
                 && Vector2::det(&_left_leg_direction, &-left_neighbor.unit_dir) >= 0.0
             {
                 // 左leg指向障碍物。
-                // println!("_left_leg_direction5");
                 _left_leg_direction = -left_neighbor.unit_dir;
                 is_left_leg_foreign = true;
             }
@@ -303,9 +307,6 @@ impl Agent {
 
                 line.direction = Vector2::new(unit_w.y(), -unit_w.x());
                 line.point = left_cutoff + unit_w * (self.radius_ * inv_time_horizon_obst);
-                // if self.id_ == 0 {
-                //     println!("line33333333333");
-                // }
                 self.orca_lines.push(line);
                 continue;
             } else if t > 1.0 && t_right < 0.0 {
@@ -314,9 +315,6 @@ impl Agent {
 
                 line.direction = Vector2::new(unit_w.y(), -unit_w.x());
                 line.point = right_cutoff + unit_w * self.radius_ * inv_time_horizon_obst;
-                // if self.id_ == 0 {
-                //     println!("line44444444444");
-                // }
                 self.orca_lines.push(line);
 
                 continue;
@@ -382,73 +380,25 @@ impl Agent {
         let inv_time_horizon = 1.0 / self.time_horizon;
 
         // 创建agent ORCA 线。
-        for i in 0..self.agent_neighbors.len() {
-            let other = unsafe { &*self.agent_neighbors.get_mut(i).unwrap().1 };
+        let len = self.agent_neighbors.len();
+        // println!("self: {:p}", self);
+        // println!("self.orca_lines: {:?}", self.orca_lines);
 
-            let relative_position = other.position_ - self.position_;
-            let relative_velocity = self.velocity_ - other.velocity_;
-            let dist_sq = Vector2::abs_sq(&relative_position);
-            let combined_radius = self.radius_ + other.radius_;
-            let combined_radius_sq = Vector2::sqr(combined_radius);
+        // println!("agent_neighbors: {:?}", self.agent_neighbors.len());
+        for i in 0..len {
+            let other = unsafe { &mut *self.agent_neighbors.get_mut(i).unwrap().1 };
+            // println!("other: {:?}", other.is_computed);
+           
+            // println!("other: {:p}", other);
+            if !other.is_computed {
+                self.compute_agent_orca(other, inv_time_horizon);
 
-            let mut line = Line::default();
-            let mut _u: Vector2 = Vector2::default();
-
-            if dist_sq > combined_radius_sq {
-                /* 没有碰撞。 */
-                let w = relative_velocity - relative_position * inv_time_horizon;
-                /* 从截止中心到相对速度的矢量。*/
-                let w_length_sq = Vector2::abs_sq(&w);
-
-                let dot_product1 = w * relative_position;
-
-                if dot_product1 < 0.0
-                    && Vector2::sqr(dot_product1) > combined_radius_sq * w_length_sq
-                {
-                    /* 截止圆上的项目。 */
-                    let w_length = w_length_sq.sqrt();
-                    let unit_w = w / w_length;
-
-                    line.direction = Vector2::new(unit_w.y(), -unit_w.x());
-                    _u = unit_w * (combined_radius * inv_time_horizon - w_length);
-                } else {
-                    /* Project on legs. */
-                    let leg = (dist_sq - combined_radius_sq).sqrt();
-
-                    if Vector2::det(&relative_position, &w) > 0.0 {
-                        /* Project on left leg. */
-                        line.direction = Vector2::new(
-                            relative_position.x() * leg - relative_position.y() * combined_radius,
-                            relative_position.x() * combined_radius + relative_position.y() * leg,
-                        ) / dist_sq;
-                    } else {
-                        /* Project on right leg. */
-                        line.direction = -Vector2::new(
-                            relative_position.x() * leg + relative_position.y() * combined_radius,
-                            -relative_position.x() * combined_radius + relative_position.y() * leg,
-                        ) / dist_sq;
-                    }
-
-                    let dot_product2 = relative_velocity * line.direction;
-                    _u = line.direction * dot_product2 - relative_velocity;
-                }
-            } else {
-                /* Collision. Project on cut-off circle of time timeStep. */
-                let inv_time_step = 1.0 / (unsafe { &*self.sim_ }).time_step;
-
-                /* Vector from cutoff center to relative velocity. */
-                let w = relative_velocity - relative_position * inv_time_step;
-
-                let w_length = Vector2::abs(&w);
-                let unit_w = w / w_length;
-
-                line.direction = Vector2::new(unit_w.y(), -unit_w.x());
-                _u = unit_w * (combined_radius * inv_time_step - w_length);
+                let inv_time_horizon2 = 1.0 / other.time_horizon;
+                other.compute_agent_orca(self, inv_time_horizon2);
             }
-            line.point = self.velocity_ + _u * 0.5;
-
-            self.orca_lines.push(line);
+            // println!("other.orca_lines: {:?}", other.orca_lines);
         }
+        println!("orca_lines: {:?}", self.orca_lines);
 
         let line_fail = Self::linear_program2(
             &self.orca_lines,
@@ -467,10 +417,11 @@ impl Agent {
                 &mut self.new_velocity,
             );
         }
+        self.is_computed = true;
     }
 
     /// 插入一个代理邻居到代理的列表。
-    pub fn insert_agent_neighbor(&mut self, agent: &Agent, range_sq: &mut f32) {
+    pub fn insert_agent_neighbor(&mut self, agent: &mut Agent, range_sq: &mut f32) {
         if self.id_ != agent.id_ {
             let dist_sq = Vector2::abs_sq(&(self.position_ - agent.position_));
 
@@ -525,6 +476,8 @@ impl Agent {
     pub fn update(&mut self) {
         self.velocity_ = self.new_velocity;
         self.position_ = self.position_ + self.velocity_ * (unsafe { &*self.sim_ }).time_step;
+        self.is_computed = false;
+        self.orca_lines.clear();
     }
 
     pub fn linear_program1(
@@ -744,6 +697,70 @@ impl Agent {
                 self.position_.y + self.radius_,
             ),
         }
+    }
+
+    pub fn compute_agent_orca(&mut self, other: &Agent, inv_time_horizon: f32) {
+        let relative_position = other.position_ - self.position_;
+        let relative_velocity = self.velocity_ - other.velocity_;
+        let dist_sq = Vector2::abs_sq(&relative_position);
+        let combined_radius = self.radius_ + other.radius_;
+        let combined_radius_sq = Vector2::sqr(combined_radius);
+
+        let mut line = Line::default();
+        let mut _u: Vector2 = Vector2::default();
+
+        if dist_sq > combined_radius_sq {
+            /* 没有碰撞。 */
+            let w = relative_velocity - relative_position * inv_time_horizon;
+            /* 从截止中心到相对速度的矢量。*/
+            let w_length_sq = Vector2::abs_sq(&w);
+
+            let dot_product1 = w * relative_position;
+
+            if dot_product1 < 0.0 && Vector2::sqr(dot_product1) > combined_radius_sq * w_length_sq {
+                /* 截止圆上的项目。 */
+                let w_length = w_length_sq.sqrt();
+                let unit_w = w / w_length;
+
+                line.direction = Vector2::new(unit_w.y(), -unit_w.x());
+                _u = unit_w * (combined_radius * inv_time_horizon - w_length);
+            } else {
+                /* Project on legs. */
+                let leg = (dist_sq - combined_radius_sq).sqrt();
+
+                if Vector2::det(&relative_position, &w) > 0.0 {
+                    /* Project on left leg. */
+                    line.direction = Vector2::new(
+                        relative_position.x() * leg - relative_position.y() * combined_radius,
+                        relative_position.x() * combined_radius + relative_position.y() * leg,
+                    ) / dist_sq;
+                } else {
+                    /* Project on right leg. */
+                    line.direction = -Vector2::new(
+                        relative_position.x() * leg + relative_position.y() * combined_radius,
+                        -relative_position.x() * combined_radius + relative_position.y() * leg,
+                    ) / dist_sq;
+                }
+
+                let dot_product2 = relative_velocity * line.direction;
+                _u = line.direction * dot_product2 - relative_velocity;
+            }
+        } else {
+            /* Collision. Project on cut-off circle of time timeStep. */
+            let inv_time_step = 1.0 / (unsafe { &*self.sim_ }).time_step;
+
+            /* Vector from cutoff center to relative velocity. */
+            let w = relative_velocity - relative_position * inv_time_step;
+
+            let w_length = Vector2::abs(&w);
+            let unit_w = w / w_length;
+
+            line.direction = Vector2::new(unit_w.y(), -unit_w.x());
+            _u = unit_w * (combined_radius * inv_time_step - w_length);
+        }
+        line.point = self.velocity_ + _u * 0.5;
+
+        self.orca_lines.push(line);
     }
 }
 

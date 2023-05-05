@@ -1,5 +1,5 @@
-use pi_orca::{obstacle::Vertices, rvos_imulator::RVOSimulator, vector2::Vector2};
-use rand::Rng;
+use pi_orca::{ rvos_imulator::RVOSimulator, vector2::Vector2, util::Vertices};
+// use rand::Rng;
 
 const temp: f32 = 200.;
 const num: usize = 100;
