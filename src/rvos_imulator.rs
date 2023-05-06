@@ -8,7 +8,7 @@ use crate::{
 use nalgebra::Point2;
 use parry2d::bounding_volume::Aabb as AABB;
 use pi_slotmap::SlotMap;
-use pi_spatial::{tilemap::TileMap, quad_helper::QuadTree};
+use pi_spatial::{quad_helper::QuadTree, tilemap::TileMap};
 use wasm_bindgen::prelude::wasm_bindgen;
 
 #[wasm_bindgen]
@@ -20,6 +20,7 @@ pub struct RVOSimulator {
     pub time_step: f32,
     tile_map: TileMap<ID, i32>,
     obstacles_map: QuadTree<ID, Vertices>,
+    id_num: usize,
 }
 
 #[wasm_bindgen]
@@ -52,6 +53,7 @@ impl RVOSimulator {
                 0,
                 0,
             ),
+            id_num: 0,
         }
     }
 
@@ -93,6 +95,7 @@ impl RVOSimulator {
                 0,
                 0,
             ),
+            id_num: 0,
         };
 
         let mut agent = Agent::new(&mut sim_);
@@ -124,7 +127,8 @@ impl RVOSimulator {
         agent.time_horizon = default_agent.time_horizon;
         agent.time_horizon_obst = default_agent.time_horizon_obst;
         agent.velocity_ = default_agent.velocity_;
-        // agent.id_ = id;
+        agent.id_ = self.id_num;
+        self.id_num += 1;
         // println!(
         //     "addAgent !!! id: {:?}, ab: {:?}",
         //     agent.id_,
@@ -132,9 +136,9 @@ impl RVOSimulator {
         // );
         let ab: AABB = agent.compute_aabb();
         let id = self.agents_.insert(agent);
-        if let Some(a) = self.agents_.get_mut(id) {
-            a.id_ = id;
-        }
+        // if let Some(a) = self.agents_.get_mut(id) {
+        //     a.id_ = id;
+        // }
         self.tile_map.add(id, ab, 0);
 
         // let agent = Box::into_raw(Box::new(agent));
@@ -163,12 +167,14 @@ impl RVOSimulator {
         agent.time_horizon = time_horizon;
         agent.time_horizon_obst = time_horizon_obst;
         agent.velocity_ = *velocity;
+        agent.id_ = self.id_num;
+        self.id_num += 1;
 
         let ab: AABB = agent.compute_aabb();
         let id = self.agents_.insert(agent);
-        if let Some(a) = self.agents_.get_mut(id) {
-            a.id_ = id;
-        }
+        // if let Some(a) = self.agents_.get_mut(id) {
+        //     a.id_ = id;
+        // }
 
         self.tile_map.add(id, ab, 0);
 
@@ -284,13 +290,16 @@ impl RVOSimulator {
     pub fn do_step(&mut self) {
         self.update_tree();
 
+        let mut obstacle_num = Vec::with_capacity(self.agents_.len());
         for (_id, agents) in &mut self.agents_ {
             agents.compute_neighbors();
-            agents.compute_new_velocity();
+            obstacle_num.push(agents.compute_obstacle_orca());
         }
 
+        let mut index = 0;
         for (_id, agents) in &mut self.agents_ {
-            agents.update();
+            agents.compute_new_velocity(obstacle_num[index]);
+            index += 1;
         }
 
         self.global_time += self.time_step;

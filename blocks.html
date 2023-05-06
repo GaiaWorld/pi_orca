@@ -26,7 +26,7 @@
       sim.set_time_step(0.25);
 
       /* Specify the default parameters for agents that are subsequently added. */
-      sim.set_agent_defaults(5.0, 10, 5.0, 5.0, 2.5, 2.0, Vector2.default());
+      sim.set_agent_defaults(5.0, 10000, 5.0, 5.0, 2.5, 2.0, Vector2.default());
 
       /*
        * Add agents, specifying their start position, and store their goals on the
@@ -39,14 +39,13 @@
         for (let j = 0; j < cout; ++j) {
           let x = 55.0 + i * 10.0;
           let y = 55.0 + j * 10.0;
-
           agents.push(sim.add_agent(Vector2.new(x, y)));
           goals.push(Vector2.new(-x, -y));
 
           divs[id] = document.createElement("div");
           divs[id].id = id;
-          divs[id].style.left = Math.floor(x * 2 + temp) + "px";
-          divs[id].style.top = Math.floor(y * 2 + temp) + "px";
+          divs[id].style.left = Math.floor(x  + temp) + "px";
+          divs[id].style.top = Math.floor(y + temp) + "px";
           divs[id].style.width = "4px";
           divs[id].style.height = "4px";
           divs[id].style.borderRadius = "50%";
@@ -180,9 +179,11 @@
     }
 
     function update_visualization(sim, divs, agents) {
-      // console.log("{}", sim.get_global_time());
+      console.log("{}", sim.get_global_time());
       for (let i = 0; i < agents.length; i++) {
-
+        if (i === 94) {
+          console.log("Agent: " + i + "; id: " + agents[i]);
+        }
         let position = sim.get_agent_position(agents[i]);
         // console.log("Agent: " + i + "; x: " + position.x() + "; y: " + position.y());
 
@@ -226,7 +227,7 @@
     function reached_goal(sim, goals, agents) {
       /* Check if all agents have reached their goals. */
       for (let i = 0; i < agents.length; ++i) {
-        if (Vector2.abs_sq(sim.get_agent_position(agents[i]).sub(goals[i])) > 20.0 * 20.0) {
+        if (Vector2.abs_sq(sim.get_agent_position(agents[i]).sub(goals[i])) > 2) {
           return false;
         }
       }
@@ -247,19 +248,27 @@
       setup_scenario(sim, goals, divs, divs2, agents);
 
 
-      let r = 0;
+      let global_time = 0;
+      let num = 0
       let id = setInterval(() => {
-        // let begin = performance.now();
+        // if (num++ > 1000) {
+        //   clearInterval(id);
+        //   console.log("======= global_time: ", global_time);
+        // }
+        let begin = performance.now();
         // console.log("num: ", r++);
         update_visualization(sim, divs, agents);
 
         set_preferred_velocities(sim, goals, agents);
         sim.do_step();
+
         // console.log("======= time: ", performance.now() - begin);
         if (reached_goal(sim, goals, agents)) {
           clearInterval(id);
         }
+        global_time += performance.now() - begin;
       }, 16)
+
     });
 
 

@@ -61,12 +61,12 @@ pub fn setup_scenario(sim: &mut RVOSimulator, goals: &mut Vec<Vector2>, agents: 
 }
 
 pub fn update_visualization(sim: &mut RVOSimulator, agents: &Vec<f64>) {
-    print!("{}", sim.get_global_time());
+    // println!("{}", sim.get_global_time());
 
-    for id in agents {
-        print!(" {:?}", sim.get_agent_position(*id));
-    }
-    println!("");
+    // for id in agents {
+    //     println!(" {:?}", sim.get_agent_position(*id));
+    // }
+    // println!("");
 }
 
 pub fn set_preferred_velocities(sim: &mut RVOSimulator, goals: &Vec<Vector2>, agents: &Vec<f64>) {
