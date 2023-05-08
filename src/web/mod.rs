@@ -1,4 +1,3 @@
-#![cfg(target_arch = "wasm32")]
 
 use crate::rvos_imulator::RVOSimulator as RVOSimulatorInner;
 use crate::vector2::Vector2;
