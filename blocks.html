@@ -7,10 +7,33 @@
 
 <body>
   <script type="module">
+    class Vector2 {
+      constructor(obj) {
+        this.x = obj.x;
+        this.y = obj.y;
+      }
+      static new(x, y) {
+        return new Vector2({ x, y });
+      }
+
+      sub(other) {
+        return Vector2.new(this.x - other.x, this.y - other.y);
+      }
+
+      static abs_sq(other) {
+        return other.x * other.x + other.y * other.y;
+      }
+
+      static normalize(other) {
+        let length = Math.sqrt(Vector2.abs_sq(other));
+        return Vector2.new(other.x / length, other.y / length);
+      }
+    }
+
     const PI = 3.141592653589793238;
 
     import init from './pkg/pi_orca.js';
-    import { RVOSimulator, Vector2, Vertices } from './pkg/pi_orca.js';
+    import { RVOSimulator } from './pkg/pi_orca.js';
 
     const temp = 200;
     const num = 100;
@@ -26,7 +49,7 @@
       sim.set_time_step(0.25);
 
       /* Specify the default parameters for agents that are subsequently added. */
-      sim.set_agent_defaults(5.0, 10000, 5.0, 5.0, 2.5, 2.0, Vector2.default());
+      sim.set_agent_defaults(5.0, 10000, 5.0, 5.0, 2.5, 2.0, new Float32Array([0.0, 0.0]));
 
       /*
        * Add agents, specifying their start position, and store their goals on the
@@ -39,12 +62,12 @@
         for (let j = 0; j < cout; ++j) {
           let x = 55.0 + i * 10.0;
           let y = 55.0 + j * 10.0;
-          agents.push(sim.add_agent(Vector2.new(x, y)));
+          agents.push(sim.add_agent(new Float32Array([x, y])));
           goals.push(Vector2.new(-x, -y));
 
           divs[id] = document.createElement("div");
           divs[id].id = id;
-          divs[id].style.left = Math.floor(x  + temp) + "px";
+          divs[id].style.left = Math.floor(x + temp) + "px";
           divs[id].style.top = Math.floor(y + temp) + "px";
           divs[id].style.width = "4px";
           divs[id].style.height = "4px";
@@ -56,7 +79,7 @@
 
           x = -55.0 - i * 10.0;
           y = 55.0 + j * 10.0;
-          agents.push(sim.add_agent(Vector2.new(x, y)));
+          agents.push(sim.add_agent(new Float32Array([x, y])));
           goals.push(Vector2.new(-x, -y));
 
           divs[id] = document.createElement("div");
@@ -73,7 +96,7 @@
 
           x = 55.0 + i * 10.0;
           y = -55.0 - j * 10.0;
-          agents.push(sim.add_agent(Vector2.new(x, y)));
+          agents.push(sim.add_agent(new Float32Array([x, y])));
           goals.push(Vector2.new(-x, -y));
           divs[id] = document.createElement("div");
           divs[id].id = id;
@@ -89,7 +112,7 @@
 
           x = -55.0 - i * 10.0;
           y = -55.0 - j * 10.0;
-          agents.push(sim.add_agent(Vector2.new(x, y)));
+          agents.push(sim.add_agent(new Float32Array([x, y])));
           goals.push(Vector2.new(-x, -y));
           divs[id] = document.createElement("div");
           divs[id].id = id;
@@ -109,32 +132,32 @@
        * Add (polygonal) obstacles, specifying their vertices in counterclockwise
        * order.
        */
-      let obstacle1 = Vertices.new();
-      let obstacle2 = Vertices.new();
-      let obstacle3 = Vertices.new();
-      let obstacle4 = Vertices.new();
+      // let obstacle1 = Vertices.new();
+      // let obstacle2 = Vertices.new();
+      // let obstacle3 = Vertices.new();
+      // let obstacle4 = Vertices.new();
 
-      obstacle1.add(Vector2.new(-10.0, 40.0));
-      obstacle1.add(Vector2.new(-40.0, 40.0));
-      obstacle1.add(Vector2.new(-40.0, 10.0));
-      obstacle1.add(Vector2.new(-10.0, 10.0));
+      // obstacle1.add(Vector2.new(-10.0, 40.0));
+      // obstacle1.add(Vector2.new(-40.0, 40.0));
+      // obstacle1.add(Vector2.new(-40.0, 10.0));
+      // obstacle1.add(Vector2.new(-10.0, 10.0));
 
-      obstacle2.add(Vector2.new(10.0, 40.0));
-      obstacle2.add(Vector2.new(10.0, 10.0));
-      obstacle2.add(Vector2.new(40.0, 10.0));
-      obstacle2.add(Vector2.new(40.0, 40.0));
+      // obstacle2.add(Vector2.new(10.0, 40.0));
+      // obstacle2.add(Vector2.new(10.0, 10.0));
+      // obstacle2.add(Vector2.new(40.0, 10.0));
+      // obstacle2.add(Vector2.new(40.0, 40.0));
 
-      obstacle3.add(Vector2.new(10.0, -40.0));
-      obstacle3.add(Vector2.new(40.0, -40.0));
-      obstacle3.add(Vector2.new(40.0, -10.0));
-      obstacle3.add(Vector2.new(10.0, -10.0));
+      // obstacle3.add(Vector2.new(10.0, -40.0));
+      // obstacle3.add(Vector2.new(40.0, -40.0));
+      // obstacle3.add(Vector2.new(40.0, -10.0));
+      // obstacle3.add(Vector2.new(10.0, -10.0));
 
-      obstacle4.add(Vector2.new(-10.0, -40.0));
-      obstacle4.add(Vector2.new(-10.0, -10.0));
-      obstacle4.add(Vector2.new(-40.0, -10.0));
-      obstacle4.add(Vector2.new(-40.0, -40.0));
+      // obstacle4.add(Vector2.new(-10.0, -40.0));
+      // obstacle4.add(Vector2.new(-10.0, -10.0));
+      // obstacle4.add(Vector2.new(-40.0, -10.0));
+      // obstacle4.add(Vector2.new(-40.0, -40.0));
 
-      sim.add_obstacle(obstacle1);
+      sim.add_obstacle(new Float32Array([-10.0, 40.0, -40.0, 40.0, -40.0, 10.0, -10.0, 10.0]));
       obstacles_div[0] = document.createElement("div");
       obstacles_div[0].style.left = Math.floor(-40 + temp + 1) + "px";
       obstacles_div[0].style.top = Math.floor(11 + temp) + "px";
@@ -144,7 +167,7 @@
       obstacles_div[0].style.position = "absolute";
       document.body.appendChild(obstacles_div[0]);
 
-      sim.add_obstacle(obstacle2);
+      sim.add_obstacle(new Float32Array([10.0, 40.0, 10.0, 10.0, 40.0, 10.0, 40.0, 40.0]));
       obstacles_div[1] = document.createElement("div");
       obstacles_div[1].style.left = Math.floor(10 + temp + 1) + "px";
       obstacles_div[1].style.top = Math.floor(11 + temp) + "px";
@@ -154,7 +177,7 @@
       obstacles_div[1].style.position = "absolute";
       document.body.appendChild(obstacles_div[1]);
 
-      sim.add_obstacle(obstacle3);
+      sim.add_obstacle(new Float32Array([10.0, -40.0, 40.0, -40.0, 40.0, -10.0, 10.0, -10.0]));
       obstacles_div[2] = document.createElement("div");
       obstacles_div[2].style.left = Math.floor(11 + temp + 1) + "px";
       obstacles_div[2].style.top = Math.floor(-41 + temp) + "px";
@@ -165,7 +188,7 @@
       obstacles_div[2].style.position = "absolute";
       document.body.appendChild(obstacles_div[2]);
 
-      sim.add_obstacle(obstacle4);
+      sim.add_obstacle(new Float32Array([-10.0, -40.0, -10.0, -10.0, -40.0, -10.0, -40.0, -40.0]));
       obstacles_div[3] = document.createElement("div");
       obstacles_div[3].style.left = Math.floor(-40 + temp + 1) + "px";
       obstacles_div[3].style.top = Math.floor(-41 + temp) + "px";
@@ -187,8 +210,8 @@
         let position = sim.get_agent_position(agents[i]);
         // console.log("Agent: " + i + "; x: " + position.x() + "; y: " + position.y());
 
-        let x = Math.round(position.x()) + temp;
-        let y = Math.round(position.y()) + temp;
+        let x = Math.round(position.x) + temp;
+        let y = Math.round(position.y) + temp;
         // console.log("Agent2: " + i + "; x: " + x + "; y: " + y);
 
         divs[i].style.left = x + "px";
@@ -209,7 +232,7 @@
           goal_vector = Vector2.normalize(goal_vector);
         }
         // console.log("========= goal_vector", goal_vector.x(), goal_vector.y());
-        sim.set_agent_pref_velocity(agents[i], goal_vector);
+        sim.set_agent_pref_velocity(agents[i], new Float32Array([goal_vector.x, goal_vector.y]) );
 
         /*
         * Perturb a little to avoid deadlocks due to perfect symmetry.
@@ -218,7 +241,7 @@
         // let dist = Math.random() * RAND_MAX * 0.0001 / RAND_MAX;
         // // console.log("angle: " + angle + "; dist: " + dist);
         // let v = Vector2.new(Math.cos(angle), Math.sin(angle)).mul_number(dist).add(sim.get_agent_pref_velocity(agents[i]))
-        // // console.log("v.x: " + v.x() + "; v.y" + v.y());
+        // console.log("v.x: " + v.x() + "; v.y" + v.y());
 
         // sim.set_agent_pref_velocity(i, v);
       }
@@ -227,7 +250,7 @@
     function reached_goal(sim, goals, agents) {
       /* Check if all agents have reached their goals. */
       for (let i = 0; i < agents.length; ++i) {
-        if (Vector2.abs_sq(sim.get_agent_position(agents[i]).sub(goals[i])) > 2) {
+        if (Vector2.abs_sq(goals[i].sub(sim.get_agent_position(agents[i]))) > 2) {
           return false;
         }
       }
@@ -251,10 +274,10 @@
       let global_time = 0;
       let num = 0
       let id = setInterval(() => {
-        // if (num++ > 1000) {
-        //   clearInterval(id);
-        //   console.log("======= global_time: ", global_time);
-        // }
+        if (num++ > 1000) {
+          clearInterval(id);
+          console.log("======= global_time: ", global_time);
+        }
         let begin = performance.now();
         // console.log("num: ", r++);
         update_visualization(sim, divs, agents);

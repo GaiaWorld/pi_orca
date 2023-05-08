@@ -370,7 +370,7 @@ impl Agent {
                 if Self::linear_program2(
                     &proj_lines,
                     radius,
-                    &Vector2::new(-lines[i].direction.y(), lines[i].direction.x()),
+                    &Vector2::new(-lines[i].direction.y, lines[i].direction.x),
                     true,
                     result,
                 ) < proj_lines.len()
@@ -450,7 +450,7 @@ impl Agent {
                 let w_length = w_length_sq.sqrt();
                 let unit_w = w / w_length;
 
-                line.direction = Vector2::new(unit_w.y(), -unit_w.x());
+                line.direction = Vector2::new(unit_w.y, -unit_w.x);
                 _u = unit_w * (combined_radius * inv_time_horizon - w_length);
             } else {
                 /* Project on legs. */
@@ -459,14 +459,14 @@ impl Agent {
                 if Vector2::det(&relative_position, &w) > 0.0 {
                     /* Project on left leg. */
                     line.direction = Vector2::new(
-                        relative_position.x() * leg - relative_position.y() * combined_radius,
-                        relative_position.x() * combined_radius + relative_position.y() * leg,
+                        relative_position.x * leg - relative_position.y * combined_radius,
+                        relative_position.x * combined_radius + relative_position.y * leg,
                     ) / dist_sq;
                 } else {
                     /* Project on right leg. */
                     line.direction = -Vector2::new(
-                        relative_position.x() * leg + relative_position.y() * combined_radius,
-                        -relative_position.x() * combined_radius + relative_position.y() * leg,
+                        relative_position.x * leg + relative_position.y * combined_radius,
+                        -relative_position.x * combined_radius + relative_position.y * leg,
                     ) / dist_sq;
                 }
 
@@ -483,7 +483,7 @@ impl Agent {
             let w_length = Vector2::abs(&w);
             let unit_w = w / w_length;
 
-            line.direction = Vector2::new(unit_w.y(), -unit_w.x());
+            line.direction = Vector2::new(unit_w.y, -unit_w.x);
             _u = unit_w * (combined_radius * inv_time_step - w_length);
         }
         line.point = self.velocity_ + _u * 0.5;
@@ -546,8 +546,8 @@ impl Agent {
                 if obstacle1.is_convex {
                     line.point = Vector2::new(0.0, 0.0);
                     line.direction = Vector2::normalize(&Vector2::new(
-                        -relative_position1.y(),
-                        relative_position1.x(),
+                        -relative_position1.y,
+                        relative_position1.x,
                     ));
                     self.orca_lines.push(line);
                 }
@@ -559,8 +559,8 @@ impl Agent {
                 {
                     line.point = Vector2::new(0.0, 0.0);
                     line.direction = Vector2::normalize(&Vector2::new(
-                        -relative_position2.y(),
-                        relative_position2.x(),
+                        -relative_position2.y,
+                        relative_position2.x,
                     ));
                     self.orca_lines.push(line);
                 }
@@ -591,12 +591,12 @@ impl Agent {
                 let leg1 = (dist_sq1 - radius_sq).sqrt();
                 // println!("_left_leg_direction1");
                 _left_leg_direction = Vector2::new(
-                    relative_position1.x() * leg1 - relative_position1.y() * self.radius_,
-                    relative_position1.x() * self.radius_ + relative_position1.y() * leg1,
+                    relative_position1.x * leg1 - relative_position1.y * self.radius_,
+                    relative_position1.x * self.radius_ + relative_position1.y * leg1,
                 ) / dist_sq1;
                 _right_leg_direction = Vector2::new(
-                    relative_position1.x() * leg1 + relative_position1.y() * self.radius_,
-                    -relative_position1.x() * self.radius_ + relative_position1.y() * leg1,
+                    relative_position1.x * leg1 + relative_position1.y * self.radius_,
+                    -relative_position1.x * self.radius_ + relative_position1.y * leg1,
                 ) / dist_sq1;
             } else if s > 1.0 && dist_sq_line <= radius_sq {
                 // 倾斜地观察障碍物，以便右顶点定义速度障碍物。
@@ -610,12 +610,12 @@ impl Agent {
                 let leg2 = (dist_sq2 - radius_sq).sqrt();
                 // println!("_left_leg_direction2");
                 _left_leg_direction = Vector2::new(
-                    relative_position2.x() * leg2 - relative_position2.y() * self.radius_,
-                    relative_position2.x() * self.radius_ + relative_position2.y() * leg2,
+                    relative_position2.x * leg2 - relative_position2.y * self.radius_,
+                    relative_position2.x * self.radius_ + relative_position2.y * leg2,
                 ) / dist_sq2;
                 _right_leg_direction = Vector2::new(
-                    relative_position2.x() * leg2 + relative_position2.y() * self.radius_,
-                    -relative_position2.x() * self.radius_ + relative_position2.y() * leg2,
+                    relative_position2.x * leg2 + relative_position2.y * self.radius_,
+                    -relative_position2.x * self.radius_ + relative_position2.y * leg2,
                 ) / dist_sq2;
             } else {
                 /* 平时的情况。 */
@@ -623,8 +623,8 @@ impl Agent {
                     let leg1 = (dist_sq1 - radius_sq).sqrt();
                     // println!("_left_leg_direction3");
                     _left_leg_direction = Vector2::new(
-                        relative_position1.x() * leg1 - relative_position1.y() * self.radius_,
-                        relative_position1.x() * self.radius_ + relative_position1.y() * leg1,
+                        relative_position1.x * leg1 - relative_position1.y * self.radius_,
+                        relative_position1.x * self.radius_ + relative_position1.y * leg1,
                     ) / dist_sq1;
                 } else {
                     /* 左顶点非凸； 左leg延伸至截止线。 */
@@ -635,8 +635,8 @@ impl Agent {
                 if obstacle2.is_convex {
                     let leg2 = (dist_sq2 - radius_sq).sqrt();
                     _right_leg_direction = Vector2::new(
-                        relative_position2.x() * leg2 + relative_position2.y() * self.radius_,
-                        -relative_position2.x() * self.radius_ + relative_position2.y() * leg2,
+                        relative_position2.x * leg2 + relative_position2.y * self.radius_,
+                        -relative_position2.x * self.radius_ + relative_position2.y * leg2,
                     ) / dist_sq2;
                 } else {
                     /* 右顶点非凸； 右leg延伸截止线。 */
@@ -689,7 +689,7 @@ impl Agent {
                 /* 投影在左截止圆上 */
                 let unit_w = Vector2::normalize(&(self.velocity_ - left_cutoff));
 
-                line.direction = Vector2::new(unit_w.y(), -unit_w.x());
+                line.direction = Vector2::new(unit_w.y, -unit_w.x);
                 line.point = left_cutoff + unit_w * (self.radius_ * inv_time_horizon_obst);
                 self.orca_lines.push(line);
                 continue;
@@ -697,7 +697,7 @@ impl Agent {
                 /* 投影在右截止圆上。*/
                 let unit_w = Vector2::normalize(&(self.velocity_ - right_cutoff));
 
-                line.direction = Vector2::new(unit_w.y(), -unit_w.x());
+                line.direction = Vector2::new(unit_w.y, -unit_w.x);
                 line.point = right_cutoff + unit_w * self.radius_ * inv_time_horizon_obst;
                 self.orca_lines.push(line);
 
@@ -725,7 +725,7 @@ impl Agent {
                 /* 对象在截止线上。 */
                 line.direction = -obstacle1.unit_dir;
                 line.point = left_cutoff
-                    + Vector2::new(-line.direction.y(), line.direction.x())
+                    + Vector2::new(-line.direction.y, line.direction.x)
                         * self.radius_
                         * inv_time_horizon_obst;
                 self.orca_lines.push(line);
@@ -738,7 +738,7 @@ impl Agent {
 
                 line.direction = _left_leg_direction;
                 line.point = left_cutoff
-                    + Vector2::new(-line.direction.y(), line.direction.x())
+                    + Vector2::new(-line.direction.y, line.direction.x)
                         * self.radius_
                         * inv_time_horizon_obst;
                 self.orca_lines.push(line);
@@ -751,7 +751,7 @@ impl Agent {
 
                 line.direction = -_right_leg_direction;
                 line.point = right_cutoff
-                    + Vector2::new(-line.direction.y(), line.direction.x())
+                    + Vector2::new(-line.direction.y, line.direction.x)
                         * self.radius_
                         * inv_time_horizon_obst;
                 self.orca_lines.push(line);

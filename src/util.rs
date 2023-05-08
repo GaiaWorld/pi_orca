@@ -4,7 +4,6 @@ use core::hash::Hash;
 use parry2d::bounding_volume::Aabb as AABB;
 use pi_slotmap::{Key, KeyData};
 use std::hash::Hasher;
-use wasm_bindgen::prelude::wasm_bindgen;
 
 /// quad节点查询函数的范本，aabb是否相交，参数a是查询参数，参数b是quad节点的aabb， 所以最常用的判断是左闭右开
 /// 应用方为了功能和性能，应该实现自己需要的quad节点的查询函数， 比如点查询， 球查询， 视锥体查询...
@@ -15,7 +14,7 @@ pub fn intersects(a: &AABB, b: &AABB) -> bool {
 /// aabb的查询函数的参数
 pub struct AbQueryArgs {
     pub aabb: AABB,
-    pub result: Vec<(ID, Vertices)>,
+    pub result: Vec<(ID, Vec<Vector2>)>,
 }
 impl AbQueryArgs {
     pub fn new(aabb: AABB) -> AbQueryArgs {
@@ -28,7 +27,7 @@ impl AbQueryArgs {
 
 /// ab节点的查询函数, 这里只是一个简单范本，使用了quad节点的查询函数intersects
 /// 应用方为了功能和性能，应该实现自己需要的ab节点的查询函数， 比如点查询， 球查询-包含或相交， 视锥体查询...
-pub fn ab_query_func(arg: &mut AbQueryArgs, id: ID, aabb: &AABB, bind: &Vertices) {
+pub fn ab_query_func(arg: &mut AbQueryArgs, id: ID, aabb: &AABB, bind: &Vec<Vector2>) {
     // println!("ab_query_func: id: {}, bind:{:?}, arg: {:?}", id, bind, arg.result);
     if intersects(&arg.aabb, aabb) {
         arg.result.push((id, bind.clone()));
@@ -48,30 +47,6 @@ pub struct Line {
     pub direction: Vector2,
 }
 
-#[wasm_bindgen]
-#[derive(Clone, Default, Debug)]
-pub struct Vertices(Vec<Vector2>);
-
-#[wasm_bindgen]
-impl Vertices {
-    pub fn new() -> Self {
-        Self(Vec::new())
-    }
-
-    pub fn add(&mut self, vertex: Vector2) {
-        self.0.push(vertex);
-    }
-
-    pub fn get(&self, index: usize) -> Vector2 {
-        self.0[index]
-    }
-
-    pub fn len(&self) -> usize {
-        self.0.len()
-    }
-}
-
-#[wasm_bindgen]
 #[derive(Debug, Clone, Copy, Default)]
 pub struct ID(pub f64);
 

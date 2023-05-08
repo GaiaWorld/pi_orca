@@ -1,7 +1,7 @@
 use crate::{
     agent::Agent,
     obstacle::Obstacle,
-    util::{ab_query_func, intersects, AbQueryArgs, Line, Vertices, ID},
+    util::{ab_query_func, intersects, AbQueryArgs, Line, ID},
     vector2::Vector2,
 };
 
@@ -9,9 +9,7 @@ use nalgebra::Point2;
 use parry2d::bounding_volume::Aabb as AABB;
 use pi_slotmap::SlotMap;
 use pi_spatial::{quad_helper::QuadTree, tilemap::TileMap};
-use wasm_bindgen::prelude::wasm_bindgen;
 
-#[wasm_bindgen]
 pub struct RVOSimulator {
     agents_: SlotMap<ID, Agent>,
     default_agent: Option<Agent>,
@@ -19,13 +17,12 @@ pub struct RVOSimulator {
     obstacles_: SlotMap<ID, Obstacle>,
     pub time_step: f32,
     tile_map: TileMap<ID, i32>,
-    obstacles_map: QuadTree<ID, Vertices>,
+    obstacles_map: QuadTree<ID, Vec<Vector2>>,
     id_num: usize,
 }
 
-#[wasm_bindgen]
 impl RVOSimulator {
-    pub fn default(_max_obstacle: usize) -> Self {
+    pub fn default() -> Self {
         let max = nalgebra::Vector2::new(100f32, 100f32);
         let min = max / 100f32;
         Self {
@@ -58,7 +55,6 @@ impl RVOSimulator {
     }
 
     pub fn new(
-        _max_obstacle: usize,
         time_step: f32,
         neighbor_dist: f32,
         max_neighbors: usize,
@@ -197,7 +193,7 @@ impl RVOSimulator {
      * @return 障碍物第一个顶点的编号，当顶点数小于2时为返回usize::MAX。
      * @note 要添加“负面”障碍，例如环境周围的边界多边形，顶点应按顺时针顺序列出。
      */
-    pub fn add_obstacle(&mut self, vertices: Vertices) -> f64 {
+    pub fn add_obstacle(&mut self, vertices: Vec<Vector2>) -> f64 {
         if vertices.len() < 2 {
             return f64::MAX;
         }
@@ -211,11 +207,11 @@ impl RVOSimulator {
         let mut ids = vec![];
         for i in 0..vertices.len() {
             let mut obstacle = Obstacle::default();
-            let pos = vertices.get(i);
+            let pos = vertices[i];
             obstacle.point_ = pos;
 
             let a = if i == vertices.len() - 1 { 0 } else { i + 1 };
-            obstacle.unit_dir = Vector2::normalize(&(vertices.get(a) - pos));
+            obstacle.unit_dir = Vector2::normalize(&(vertices[a] - pos));
 
             if vertices.len() == 2 {
                 obstacle.is_convex = true;
@@ -223,8 +219,7 @@ impl RVOSimulator {
                 let a = if i == 0 { vertices.len() - 1 } else { i - 1 };
                 let b = if i == vertices.len() - 1 { 0 } else { i + 1 };
 
-                obstacle.is_convex =
-                    Vector2::left_of(&vertices.get(a), &pos, &vertices.get(b)) >= 0.0;
+                obstacle.is_convex = Vector2::left_of(&vertices[a], &pos, &vertices[b]) >= 0.0;
             }
 
             let id = self.obstacles_.insert(obstacle);
@@ -568,9 +563,7 @@ impl RVOSimulator {
     pub fn set_time_step(&mut self, time_step: f32) {
         self.time_step = time_step;
     }
-}
 
-impl RVOSimulator {
     /**
      * @brief     计算代理邻居。
      * @param[in] ab   当前代理的AABB
@@ -599,7 +592,7 @@ impl RVOSimulator {
      * @param[in] ab   当前代理的AABB
      * @return         返回障碍物的数据集合
      */
-    pub fn compute_obstacle_aabb(&mut self, ab: AABB) -> Vec<(ID, Vertices)> {
+    pub fn compute_obstacle_aabb(&mut self, ab: AABB) -> Vec<(ID, Vec<Vector2>)> {
         let mut r = vec![];
         let tree = &self.obstacles_map;
         let mut args = AbQueryArgs::new(ab.clone());

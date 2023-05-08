@@ -1,4 +1,4 @@
-use pi_orca::{rvos_imulator::RVOSimulator, util::Vertices, vector2::Vector2};
+use pi_orca::{rvos_imulator::RVOSimulator, vector2::Vector2};
 // use rand::Rng;
 
 // const temp: f32 = 200.;
@@ -6,7 +6,7 @@ use pi_orca::{rvos_imulator::RVOSimulator, util::Vertices, vector2::Vector2};
 // const RAND_MAX: f32 = 32767.;
 // const RVO_TWO_PI: f32 = 6.28318530717958647692;
 fn main() {
-    let mut sim = RVOSimulator::default(2000);
+    let mut sim = RVOSimulator::default();
     let mut goals = vec![];
     let mut agents = vec![];
 
@@ -14,7 +14,7 @@ fn main() {
     let begin = std::time::Instant::now();
     let mut n = 0;
     loop {
-        if n > 2000{
+        if n > 2000 {
             break;
         }
         update_visualization(&mut sim, &agents);
@@ -27,7 +27,7 @@ fn main() {
         }
 
         // std::thread::sleep(std::time::Duration::from_millis(16));
-        n+=1;
+        n += 1;
     }
     println!("time = {:?}", begin.elapsed());
 }
@@ -73,30 +73,34 @@ pub fn setup_scenario(sim: &mut RVOSimulator, goals: &mut Vec<Vector2>, agents: 
      * Add (polygonal) obstacles, specifying their vertices in counterclockwise
      * order.
      */
-    let mut obstacle1 = Vertices::new();
-    let mut obstacle2 = Vertices::new();
-    let mut obstacle3 = Vertices::new();
-    let mut obstacle4 = Vertices::new();
 
-    obstacle1.add(Vector2::new(-10.0, 40.0));
-    obstacle1.add(Vector2::new(-40.0, 40.0));
-    obstacle1.add(Vector2::new(-40.0, 10.0));
-    obstacle1.add(Vector2::new(-10.0, 10.0));
+    let obstacle1 = vec![
+        Vector2::new(-10.0, 40.0),
+        Vector2::new(-40.0, 40.0),
+        Vector2::new(-40.0, 10.0),
+        Vector2::new(-10.0, 10.0),
+    ];
 
-    obstacle2.add(Vector2::new(10.0, 40.0));
-    obstacle2.add(Vector2::new(10.0, 10.0));
-    obstacle2.add(Vector2::new(40.0, 10.0));
-    obstacle2.add(Vector2::new(40.0, 40.0));
+    let obstacle2 = vec![
+        Vector2::new(10.0, 40.0),
+        Vector2::new(10.0, 10.0),
+        Vector2::new(40.0, 10.0),
+        Vector2::new(40.0, 40.0),
+    ];
 
-    obstacle3.add(Vector2::new(10.0, -40.0));
-    obstacle3.add(Vector2::new(40.0, -40.0));
-    obstacle3.add(Vector2::new(40.0, -10.0));
-    obstacle3.add(Vector2::new(10.0, -10.0));
+    let obstacle3 = vec![
+        Vector2::new(10.0, -40.0),
+        Vector2::new(40.0, -40.0),
+        Vector2::new(40.0, -10.0),
+        Vector2::new(10.0, -10.0),
+    ];
 
-    obstacle4.add(Vector2::new(-10.0, -40.0));
-    obstacle4.add(Vector2::new(-10.0, -10.0));
-    obstacle4.add(Vector2::new(-40.0, -10.0));
-    obstacle4.add(Vector2::new(-40.0, -40.0));
+    let obstacle4 = vec![
+        Vector2::new(-10.0, -40.0),
+        Vector2::new(-10.0, -10.0),
+        Vector2::new(-40.0, -10.0),
+        Vector2::new(-40.0, -40.0),
+    ];
 
     sim.add_obstacle(obstacle1);
     sim.add_obstacle(obstacle2);
@@ -105,12 +109,12 @@ pub fn setup_scenario(sim: &mut RVOSimulator, goals: &mut Vec<Vector2>, agents: 
 }
 
 pub fn update_visualization(sim: &mut RVOSimulator, agents: &Vec<f64>) {
-    // println!("global_time : {}", sim.get_global_time());
+    println!("global_time : {}", sim.get_global_time());
 
-    // for id in agents {
-    //     print!(" {:?}", sim.get_agent_position(*id));
-    // }
-    // println!("");
+    for id in agents {
+        print!(" {:?}", sim.get_agent_position(*id));
+    }
+    println!("");
 }
 
 pub fn set_preferred_velocities(sim: &mut RVOSimulator, goals: &Vec<Vector2>, agents: &Vec<f64>) {

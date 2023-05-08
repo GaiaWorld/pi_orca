@@ -7,10 +7,11 @@
 
 <body>
   <script type="module">
+
     const PI = 3.141592653589793238;
 
     import init from './pkg/pi_orca.js';
-    import { RVOSimulator, Vector2 } from './pkg/pi_orca.js';
+    import { RVOSimulator } from './pkg/pi_orca.js';
 
     const temp = 200;
     const num = 150;
@@ -20,10 +21,33 @@
 
     let is_remove = false;
 
+    class Vector2 {
+      constructor(obj) {
+        this.x = obj.x;
+        this.y = obj.y;
+      }
+      static new(x, y) {
+        return new Vector2({ x, y });
+      }
+
+      sub(other) {
+        return Vector2.new(this.x - other.x, this.y - other.y);
+      }
+
+      static abs_sq(other) {
+        return other.x * other.x + other.y * other.y;
+      }
+
+      static normalize(other) {
+        let length = Math.sqrt(Vector2.abs_sq(other));
+        return Vector2.new(other.x / length, other.y / length);
+      }
+    }
+
     function setup_scenario(sim, goals, divs, agents) {
       sim.set_time_step(0.25);
 
-      sim.set_agent_defaults(15.0, 10, 10.0, 10.0, 2.5, maxSpeed, Vector2.default());
+      sim.set_agent_defaults(15.0, 10, 10.0, 10.0, 2.5, maxSpeed, new Float32Array([0.0, 0.0]));
       for (let i = 0; i < num; i++) {
         let x = Math.cos(i * 2.0 * PI / num) * temp;
         let y = Math.sin(i * 2.0 * PI / num) * temp;
@@ -42,15 +66,15 @@
         divs[i].style.position = "absolute";
         document.body.appendChild(divs[i]);
 
-        agents[i] = sim.add_agent(Vector2.new(x, y));
+        agents[i] = sim.add_agent(new Float32Array([x, y]));
         // console.log("-sim.getAgentPosition(i): ", sim.get_agent_position(i).neg());
 
-        goals[i] = sim.get_agent_position(agents[i]).neg();
+        goals[i] = Vector2.new(-x, -y);
       }
 
     }
 
-    function update_visualization(sim, divs,agents) {
+    function update_visualization(sim, divs, agents) {
       console.log("{}", sim.get_global_time());
       for (let i = 0; i < num; i++) {
         if (i == remove_id && is_remove) {
@@ -62,8 +86,8 @@
         // lastpotion[i] = position;
         // console.log("Agent: " + i + "; x: " + position.x() + "; y: " + position.y());
 
-        let x = Math.floor(position.x()) + temp;
-        let y = Math.floor(position.y()) + temp;
+        let x = Math.floor(position.x) + temp;
+        let y = Math.floor(position.y) + temp;
         // console.log("Agent2: " + i + "; x: " + x + "; y: " + y);
 
         divs[i].style.left = x + "px";
@@ -89,7 +113,7 @@
           goal_vector = Vector2.normalize(goal_vector);
         }
 
-        sim.set_agent_pref_velocity(agents[i], goal_vector);
+        sim.set_agent_pref_velocity(agents[i], new Float32Array([goal_vector.x, goal_vector.y]));
       }
     }
 
@@ -99,8 +123,8 @@
         if (i == remove_id && is_remove) {
           continue;
         }
-        if (Vector2.abs_sq((sim.get_agent_position(agents[i]).sub(goals[i])))
-          > sim.get_agent_radius(agents[i]) * sim.get_agent_radius(agents[i])) {
+        let position = sim.get_agent_position(i);
+        if (Vector2.abs_sq(goals[i].sub(sim.get_agent_position(agents[i]))) > 2) {
           // if (sim.get_global_time() > 866) {
           //   console.log("i: ", i);
           //   console.log("sim.getAgentPosition(i): ", sim.get_agent_position(i).x(), " ", sim.get_agent_position(i).y());

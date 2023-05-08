@@ -2,297 +2,410 @@
 <html>
 
 <head>
-  <title>我的网页</title>
+  <title>寻路及避障</title>
 
+  <style>
+    .panel {
+      position: absolute;
+      left: 800px;
+      top: 40px;
+    }
+    .btn {
+      font-size: 20px; /* Reset default */
+      color: white;
+      background-color: darkcyan;
+      border-color:black;
+      border-radius: 4px;
+      border-style: 2px;
+      margin: 4px;
+      padding: 10px;
+      text-align: center;
+    }
+  </style>
 </head>
 
 <body>
-  <div>
-    <script type="module">
-      const PI = 3.141592653589793238;
+  <canvas id="canvas" style="position: absolute; left: 0px; top: 0px;">
+  </canvas>
+  <div class="panel">
+      <div class="btn">设置块障碍</div>
+      <div class="btn">设置边障碍</div>
+      <div class="btn">设置寻路终点</div>
+      <div class="btn">添加新角色</div>
+      <br>
+      <div class="btn">开始寻路</div>
+      <div class="btn">清空</div>
+    </div>
 
-      import init from './pkg/pi_orca.js';
-      import { RVOSimulator, Vector2, Vertices, TileMap, TileObstacle, AStar, NodeIndex } from './pkg/pi_orca.js';
+</body>
+<script type="module">
+  /// 场景， 模拟器 AStar寻路 地图 组织等，都绑在上面
+  window.scene = {};
+
+  function f32_equal(f1, f2) {
+    Math.abs(p.x - this.x) <= 0.00001
+  }
+  class Point {
+    constructor(x, y) {
+      this.x = x;
+      this.y = y;
+    }
+    equal(p) {
+      f32_equal(p.x, this.x) && f32_equal(p.y, this.y)
+    }
+  }
+  /// 一个组织团体， 内部按小组距离分成多个小组，小组距离指组内角色和其他角色的距离。需要设置小组距离多少就算一个小组。
+  /// 可以根据地图信息和集合点及方向来计算团体内每个角色在集合点附近的位置。
+  /// 需要设定阵型间距，用来描述不同角色之间的间距
+  class Org {
+    constructor(group_dist, spacing) {
+      this.arr = [];
+      this.group_dist = group_dist; // 每个分组之间的距离
+      this.spacing = spacing;
+      this.point = null;
+    }
+    // 根据地图信息和集合点及方向来计算团体内每个角色在集合点附近的位置
+    calc_target_location(map, assembly_point, direction) {
+      let count = 0;
+      for(let g in this.arr) {
+        count += g.arr.len;
+      }
+    }
+    
+    // 整理方法，一般每秒调用一次，重新计算小组，及被卡住的角色
+    collect() {
+
+    }
+    // 帧推方法
+    frame() {
+      
+    }
+    // 绘制方法
+    draw(ctx) {
+      
+    }
+  }
+  // 距离接近的小组，内部维护了该小组的aabb包围盒。
+  class Group {
+    constructor(role) {
+      this.arr = [role];
+      this.aabb = [new Point(0,0), new Point(0,0)];
+    }
+    add(role) {
+      this.arr.push(role);
+    }
+    calc_aabb() {
+      this.arr.push(role);
+    }
+  }
+  // 角色， 需要设置角色的位置和相对位置，相对位置是个枚举，为front(前排) middle(中排) back(后排)
+  class Role {
+    constructor(id, pos, relative_pos) {
+      this.id = id;
+      this.pos = pos;
+      this.relative_pos = relative_pos;
+      this.path = null; // 路径点 Point
+      this.target_location = null; //目标点 Point
+    }
+    // 设置目标位置
+    set_target_location(target_location) {
+       this.target_location = target_location;
+    }
+  }
+  function draw(canvas) {
+    requestAnimationFrame(draw);
+    if (scene.map == null) return
+    let ctx = canvas.getContext('2d');
+    draw_tiles(scene.map, ctx);
+    draw_obstacles(scene.map, ctx);
+    draw_agents(scene.sim, ctx);
+    draw_cur_setting(ctx);
+  }
+  let canvas = document.getElementById("ccc");
+  draw(canvas);
+</script>
 
 
-      const DefaultMaxSpeed = 2.0;
-      const RAND_MAX = 0x7fff;
+<script type="module">
+  const PI = 3.141592653589793238;
 
-      const mapwidth = 10;
-      const mapHeight = 10;
-      const scaling = 20;
+  import init from './pkg/wasm_engine.js';
+  import { RVOSimulator, Vector2, Vertices, TileMap, TileObstacle, AStar, NodeIndex } from './pkg/wasm_engine.js';
 
-      let paths = [];
-      let goals = [];
-      let divs = [];
-      let agents = [];
 
-      let lastpotion = [];
-      let velocitys = [];
+  const DefaultMaxSpeed = 2.0;
+  const RAND_MAX = 0x7fff;
 
-      class Path {
-        constructor(path) {
-          this.path = path;
-          this.index = 0;
-          this.lengths = [];
-          for (let i = 0; i < path.length - 1; i++) {
-            this.lengths.push(Vector2.abs_sq(path[i].sub(path[i + 1])));
-          }
+  const mapwidth = 30;
+  const mapHeight = 30;
+  const scaling = 20;
+
+  let paths = [];
+  let goals = [];
+  let divs = [];
+  let agents = [];
+
+  let lastpotion = [];
+  let velocitys = [];
+
+  class Path {
+    constructor(path) {
+      this.path = path;
+      this.index = 0;
+      this.lengths = [];
+      for (let i = 0; i < path.length - 1; i++) {
+        this.lengths.push(Vector2.abs_sq(path[i].sub(path[i + 1])));
+      }
+    }
+
+    next() {
+      return this.path[this.index++];
+    }
+
+    reset() {
+      this.index = 0;
+    }
+
+    surplusLengthSq() {
+      let length = 0;
+      for (let i = this.index; i < this.lengths.length; i++) {
+        let inedx = i - 1;
+        if (inedx < 0) {
+          inedx = 0;
         }
+        length += this.lengths[inedx];
+      }
+      return length;
+    }
+  }
 
-        next() {
-          return this.path[this.index++];
-        }
+  function update_divs(sim, divs) {
+    // console.log("{}", sim.get_global_time());
+    for (let i = 0; i < agents.length; i++) {
+      let position = sim.get_agent_position(agents[i]);
+      // console.log("Agent: " + i + "; x: " + position.x() + "; y: " + position.y());
 
-        reset() {
-          this.index = 0;
-        }
+      let x = Math.floor(position.x());
+      let y = Math.floor(position.y());
+      // console.log("Agent2: " + i + "; x: " + x + "; y: " + y);
 
-        surplusLengthSq() {
-          let length = 0;
-          for (let i = this.index; i < this.lengths.length; i++) {
-            let inedx = i - 1;
-            if (inedx < 0) {
-              inedx = 0;
-            }
-            length += this.lengths[inedx];
-          }
-          return length;
-        }
+      divs[agents[i]].style.left = x + "px";
+      divs[agents[i]].style.top = y + "px";
+    }
+  }
+
+  function set_preferred_velocities(sim, goals) {
+    let goal_vectors = [];
+    /*
+    * Set the preferred velocity to be a vector of unit magnitude (speed) in the
+    * direction of the goal.
+    */
+    for (let i = 0; i < agents.length; i++) {
+      let goal_vector = goals[agents[i]].sub(sim.get_agent_position(agents[i]));
+
+      let temp = Vector2.abs_sq(goal_vector);
+      goal_vectors.push(temp);
+      if (temp > 1) {
+        goal_vector = Vector2.normalize(goal_vector);
       }
 
-      function update_divs(sim, divs) {
-        // console.log("{}", sim.get_global_time());
-        for (let i = 0; i < agents.length; i++) {
-          let position = sim.get_agent_position(agents[i]);
-          // console.log("Agent: " + i + "; x: " + position.x() + "; y: " + position.y());
+      sim.set_agent_pref_velocity(agents[i], goal_vector);
 
-          let x = Math.floor(position.x());
-          let y = Math.floor(position.y());
-          // console.log("Agent2: " + i + "; x: " + x + "; y: " + y);
+      velocitys[agents[i]] = goal_vector;
+    }
+  }
 
-          divs[agents[i]].style.left = x + "px";
-          divs[agents[i]].style.top = y + "px";
+  function reached_goal(sim, a_star, map) {
+    /* Check if all agents have reached their goals. */
+    let reached_goal = true;
+    for (let i = 0; i < agents.length; ++i) {
+      // console.log("agent" + i + "距离目标: " + Vector2.abs_sq(sim.get_agent_position(i).sub(goals[i])));
+      let cur_postion = sim.get_agent_position(agents[i]);
+
+      if (Vector2.abs_sq(cur_postion.sub(goals[agents[i]])) > 2.0 * 2.0) {
+        reached_goal = false;
+        reset_path(sim, a_star, map, cur_postion, agents[i]);
+      } else {
+        let path = paths[agents[i]].next();
+        if (path) {
+          console.log("end_pos" + i + ": " + path.x() + " " + path.y());
+          goals[agents[i]] = path;
+          reached_goal = false;
         }
       }
+    }
+    return reached_goal;
+  }
 
-      function set_preferred_velocities(sim, goals) {
-        let goal_vectors = [];
-        /*
-        * Set the preferred velocity to be a vector of unit magnitude (speed) in the
-        * direction of the goal.
-        */
-        for (let i = 0; i < agents.length; i++) {
-          let goal_vector = goals[agents[i]].sub(sim.get_agent_position(agents[i]));
+  function reset_path(sim, a_star, map, cur_postion, i) {
+    let dist_sq = Vector2.abs_sq(cur_postion.sub(lastpotion[i][0]));
+    if (dist_sq < 0.0001) {
+      if (lastpotion[i][1] < 10) {
+        lastpotion[i][1] += 1;
+      } else {
+        lastpotion[i][1] = 0;
+        let start_pos = cur_postion.div(scaling);
+        let start_index = NodeIndex.new(Math.floor(start_pos.y()) * mapHeight + Math.floor(start_pos.x()));
+        let end_index;
 
-          let temp = Vector2.abs_sq(goal_vector);
-          goal_vectors.push(temp);
-          if (temp > 1) {
-            goal_vector = Vector2.normalize(goal_vector);
-          }
-
-          sim.set_agent_pref_velocity(agents[i], goal_vector);
-
-          velocitys[agents[i]] = goal_vector;
-        }
-      }
-
-      function reached_goal(sim, a_star, map) {
-        /* Check if all agents have reached their goals. */
-        let reached_goal = true;
-        for (let i = 0; i < agents.length; ++i) {
-          // console.log("agent" + i + "距离目标: " + Vector2.abs_sq(sim.get_agent_position(i).sub(goals[i])));
-          let cur_postion = sim.get_agent_position(agents[i]);
-
-          if (Vector2.abs_sq(cur_postion.sub(goals[agents[i]])) > 2.0 * 2.0) {
-            reached_goal = false;
-            reset_path(sim, a_star, map, cur_postion, agents[i]);
-          } else {
-            let path = paths[agents[i]].next();
-            if (path) {
-              console.log("end_pos" + agents[i] + ": " + path.x() + " " + path.y());
-              goals[agents[i]] = path;
-              reached_goal = false;
-            }
-          }
-        }
-        return reached_goal;
-      }
-
-      function reset_path(sim, a_star, map, cur_postion, i) {
-        let dist_sq = Vector2.abs_sq(cur_postion.sub(lastpotion[i][0]));
-        if (dist_sq < 0.0001) {
-          if (lastpotion[i][1] < 10) {
-            lastpotion[i][1] += 1;
-          } else {
-            lastpotion[i][1] = 0;
-            let start_pos = cur_postion.div(scaling);
-            let start_index = NodeIndex.new(Math.floor(start_pos.y()) * mapHeight + Math.floor(start_pos.x()));
-            let end_index;
-
-            while (true) {
-              let end_pos = paths[i].next();
-              if (end_pos) {
-                end_index = NodeIndex.new(end_pos.y() * mapHeight + end_pos.x());
-              } else {
-                break;
-              }
-            }
-
-            // goals 中的目标点就是最后一个
-            if (!end_index) {
-              let end_pos = goals[i].div(scaling);
-              end_index = NodeIndex.new(Math.floor(end_pos.y()) * mapHeight + Math.floor(end_pos.x()));
-            }
-
-            let res = a_star.find_path(map, 2000, start_index, end_index);
-
-            paths[i] = a_star.result(res, map);
-            goals[i] = paths[i].next().mul_number(scaling).add(Vector2.new(scaling / 2, scaling / 2));
-          }
-
-        }
-        lastpotion[i][0] = cur_postion;
-      }
-
-      function setObstacle(map, sim, ctx, min, max) {
-
-        for (let i = min.x(); i < max.x(); i++) {
-          for (let j = min.y(); j < max.y(); j++) {
-            let index = j * mapHeight + i;
-            map.set_obstacle(NodeIndex.new(index), TileObstacle.Center);
-          }
-        }
-
-        let obstacle1 = Vertices.new();
-
-        obstacle1.add(min.mul_number(scaling));
-        obstacle1.add(Vector2.new(max.x(), min.y()).mul_number(scaling));
-        obstacle1.add(max.mul_number(scaling));
-        obstacle1.add(Vector2.new(min.x(), max.y()).mul_number(scaling));
-        sim.add_obstacle(obstacle1);
-
-        ctx.fillRect(min.x() * scaling, min.y() * scaling, (max.x() - min.x()) * scaling, (max.y() - min.y()) * scaling);
-      }
-
-      function find_path(a_star, map, sim, start, end) {
-        let start_index = NodeIndex.new(start.y() * mapHeight + start.x());
-        let end_index = NodeIndex.new(end.y() * mapHeight + end.x());
-        let res = a_star.find_path(map, 1000, start_index, end_index);
-
-        let begin = end_index;
-        if (!res) {
-          throw Error("no path!!! start: " + start_index.index() + " end: " + end_index.index() + "");
-        }
-
-        if (res.index() != end_index.index()) {
-          console.error("node number not enough!!!");
-          begin = res;
-        }
-
-        return a_star.result(begin, map);
-      }
-
-      function addAgent(a_star, map, sim, start, end,) {
-        let path_iter = find_path(a_star, map, sim, start, end);
-        let path_arr = [];
         while (true) {
-          let p = path_iter.next();
-          if (p) {
-            path_arr.push(p.mul_number(scaling).add(Vector2.new(scaling / 2, scaling / 2)));
+          let end_pos = paths[i].next();
+          if (end_pos) {
+            end_index = NodeIndex.new(end_pos.y() * mapHeight + end_pos.x());
           } else {
             break;
           }
         }
-        let path = new Path(path_arr);
-       
-        let p = path.next();
-        let id = sim.add_agent(p);
-        agents.push(id) ;
-        goals[id] = path.next();
-        lastpotion[id] = [p, 0];
-        paths[id] = path;
 
-        let div = document.createElement("div")
-        div.id = id;
-        div.style.left = Math.floor(p.x()) + "px";
-        div.style.top = Math.floor(p.y()) + "px";
-        div.style.width = "4px";
-        div.style.height = "4px";
-        div.style.borderRadius = "50%";
-        div.style.backgroundColor = "rgb(255, 0, 0)";
-        div.style.position = "absolute";
-        document.body.appendChild(div);
+        // goals 中的目标点就是最后一个
+        if (!end_index) {
+          let end_pos = goals[i].div(scaling);
+          end_index = NodeIndex.new(Math.floor(end_pos.y()) * mapHeight + Math.floor(end_pos.x()));
+        }
 
-        divs[id] = div;
+        let res = a_star.find_path(map, 2000, start_index, end_index);
+
+        paths[i] = a_star.result(res, map);
+        goals[i] = paths[i].next().mul_number(scaling).add(Vector2.new(scaling / 2, scaling / 2));
       }
 
-      init().then(module => {
-        let map = TileMap.new(mapwidth, mapHeight);
-        let a_star = AStar.new(mapwidth, mapHeight, 1000);
-
-        let sim = RVOSimulator.default(2000, // note: 此参数为障碍物的最大顶点个数，实际传入的定点数必须小于等于此数 
-        );
-        sim.set_time_step(0.25);
-        sim.set_agent_defaults(10.0, 10, 5.0, 5.0, 1.5, DefaultMaxSpeed, Vector2.default());
-
-        let canvas = document.createElement("canvas");
-        canvas.width = mapwidth * scaling;
-        canvas.height = mapHeight * scaling;
-        document.body.appendChild(canvas);
-
-        let ctx = canvas.getContext('2d');
-        ctx.strokeStyle = 'rgb(255,0,0)';
-        ctx.fillStyle = "rgba(100, 100, 100, 0.5)";
-
-        ctx.lineWidth = 1;
-        for (let i = 0; i <= canvas.width; i += scaling) {
-          ctx.beginPath();
-          ctx.moveTo(i, 0);
-          ctx.lineTo(i, canvas.height);
-          ctx.stroke();
-        }
-
-        for (let j = 0; j <= canvas.height; j += scaling) {
-          ctx.beginPath();
-          ctx.moveTo(0, j);
-          ctx.lineTo(canvas.width, j);
-          ctx.stroke();
-        }
-
-        setObstacle(map, sim, ctx, Vector2.new(4, 0), Vector2.new(6, 4));
-        setObstacle(map, sim, ctx, Vector2.new(4, 5), Vector2.new(6, 10));
-
-        addAgent(a_star, map, sim, Vector2.new(9, 9), Vector2.new(1, 9));
-        addAgent(a_star, map, sim, Vector2.new(8, 9), Vector2.new(0, 9));
-        addAgent(a_star, map, sim, Vector2.new(9, 8), Vector2.new(1, 8));
-        addAgent(a_star, map, sim, Vector2.new(8, 8), Vector2.new(0, 8));
-
-
-        let r = 0;
-        let id = setInterval(() => {
-          // console.log("num: ", r++);
-          update_divs(sim, divs);
-
-          set_preferred_velocities(sim, goals);
-          sim.do_step();
-          // console.log("======= time: ", performance.now() - begin);
-          if (reached_goal(sim, a_star, map)) {
-            clearInterval(id);
-          }
-        }, 16)
-      });
-
-
-    </script>
-</body>
-
-<style>
-  canvas {
-    position: absolute;
-    left: 0px;
-    top: 0px;
+    }
+    lastpotion[i][0] = cur_postion;
   }
-</style>
+
+  function setObstacle(map, sim, ctx, min, max) {
+
+    for (let i = min.x(); i < max.x(); i++) {
+      for (let j = min.y(); j < max.y(); j++) {
+        let index = j * mapHeight + i;
+        map.set_obstacle(NodeIndex.new(index), TileObstacle.Center);
+      }
+    }
+
+    let obstacle1 = Vertices.new();
+
+    obstacle1.add(min.mul_number(scaling));
+    obstacle1.add(Vector2.new(max.x(), min.y()).mul_number(scaling));
+    obstacle1.add(max.mul_number(scaling));
+    obstacle1.add(Vector2.new(min.x(), max.y()).mul_number(scaling));
+    sim.add_obstacle(obstacle1);
+
+    ctx.fillRect(min.x() * scaling, min.y() * scaling, (max.x() - min.x()) * scaling, (max.y() - min.y()) * scaling);
+  }
+
+  function find_path(a_star, map, sim, start, end) {
+    let start_index = NodeIndex.new(start.y() * mapHeight + start.x());
+    let end_index = NodeIndex.new(end.y() * mapHeight + end.x());
+    let res = a_star.find_path(map, 1000, start_index, end_index);
+
+    let begin = end_index;
+    if (!res) {
+      throw Error("no path!!! start: " + start_index.index() + " end: " + end_index.index() + "");
+    }
+
+    if (res.index() != end_index.index()) {
+      console.error("node number not enough!!!");
+      begin = res;
+    }
+
+    return a_star.result(begin, map);
+  }
+
+  function addAgent(a_star, map, sim, start, end,) {
+    let path_iter = find_path(a_star, map, sim, start, end);
+    let path_arr = [];
+    while (true) {
+      let p = path_iter.next();
+      if (p) {
+        path_arr.push(p.mul_number(scaling).add(Vector2.new(scaling / 2, scaling / 2)));
+      } else {
+        break;
+      }
+    }
+    let path = new Path(path_arr);
+   
+    let p = path.next();
+    let id = sim.add_agent(p);
+    agents.push(id) ;
+    goals[id] = path.next();
+    lastpotion[id] = [p, 0];
+    paths[id] = path;
+
+    let div = document.createElement("div")
+    div.id = id;
+    div.style.left = Math.floor(p.x()) + "px";
+    div.style.top = Math.floor(p.y()) + "px";
+    div.style.width = "4px";
+    div.style.height = "4px";
+    div.style.borderRadius = "50%";
+    div.style.backgroundColor = "rgb(255, 0, 0)";
+    div.style.position = "absolute";
+    document.body.appendChild(div);
+
+    divs[id] = div;
+  }
+
+  init().then(module => {
+    let map = TileMap.new(mapwidth, mapHeight);
+    let a_star = AStar.new(mapwidth, mapHeight, 1000);
+
+    let sim = RVOSimulator.default(2000, // note: 此参数为障碍物的最大顶点个数，实际传入的定点数必须小于等于此数 
+    );
+    sim.set_time_step(0.25);
+    sim.set_agent_defaults(10.0, 10, 5.0, 5.0, 1.5, DefaultMaxSpeed, Vector2.default());
+
+    let canvas = document.getElementById("canvas");
+    let width = mapwidth * scaling;
+    let height = mapHeight * scaling;
+    canvas.width = width + 30;
+    canvas.height = height + 30;
+
+    let ctx = canvas.getContext('2d');
+    ctx.font = "14px Arial";
+    ctx.fillStyle = "black";
+    ctx.strokeStyle = 'rgb(255,0,0)';
+    ctx.fillStyle = "rgba(100, 100, 100, 0.5)";
+
+    ctx.lineWidth = 1;
+    for (let i = 0,j=0; i <= width; i += scaling,j++) {
+      ctx.beginPath();
+      ctx.moveTo(i, 0);
+      ctx.lineTo(i, height);
+      ctx.stroke();
+      ctx.fillText(""+j, i, height + 20);
+    }
+
+    for (let i = 0,j=0; i <= height; i += scaling,j++) {
+      ctx.beginPath();
+      ctx.moveTo(0, i);
+      ctx.lineTo(width, i);
+      ctx.stroke();
+      ctx.fillText(""+j, width+5, i+15);
+    }
+
+    setObstacle(map, sim, ctx, Vector2.new(4, 0), Vector2.new(6, 4));
+    setObstacle(map, sim, ctx, Vector2.new(4, 5), Vector2.new(6, 10));
+
+    addAgent(a_star, map, sim, Vector2.new(9, 9), Vector2.new(1, 9));
+    addAgent(a_star, map, sim, Vector2.new(8, 9), Vector2.new(0, 9));
+    addAgent(a_star, map, sim, Vector2.new(9, 8), Vector2.new(1, 8));
+    addAgent(a_star, map, sim, Vector2.new(8, 8), Vector2.new(0, 8));
+
+
+    let r = 0;
+    let id = setInterval(() => {
+      // console.log("num: ", r++);
+      update_divs(sim, divs);
+
+      set_preferred_velocities(sim, goals);
+      sim.do_step();
+      // console.log("======= time: ", performance.now() - begin);
+      if (reached_goal(sim, a_star, map)) {
+        clearInterval(id);
+      }
+    }, 16)
+  });
+</script>
+
 
 </html>

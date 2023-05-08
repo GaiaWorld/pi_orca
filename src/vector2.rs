@@ -1,16 +1,14 @@
 use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
-use wasm_bindgen::prelude::wasm_bindgen;
 
 pub const RVO_EPSILON: f32 = 0.00001;
+use serde::{Deserialize, Serialize};
 
-#[wasm_bindgen]
-#[derive(Clone, Copy, Debug, Default)]
+#[derive(Clone, Copy, Debug, Default, Serialize, Deserialize)]
 pub struct Vector2 {
     pub x: f32,
     pub y: f32,
 }
 
-#[wasm_bindgen]
 impl Vector2 {
     pub fn default() -> Self {
         Self {
@@ -153,7 +151,6 @@ impl Mul<&Self> for Vector2 {
     type Output = f32;
 
     fn mul(self, rhs: &Self) -> f32 {
-        
         return self.x * rhs.x + self.y * rhs.y;
     }
 }
