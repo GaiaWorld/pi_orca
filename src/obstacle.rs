@@ -1,13 +1,15 @@
-use crate::{util::ID, vector2::Vector2};
+use pi_slotmap::DefaultKey;
+
+use crate::{ vector2::Vector2};
 
 #[derive(Clone, Copy, Debug)]
 pub struct Obstacle {
     pub is_convex: bool,
-    pub next_obstacle: ID,
+    pub next_obstacle: DefaultKey,
     pub point_: Vector2,
-    pub prev_obstacle: ID,
+    pub prev_obstacle: DefaultKey,
     pub unit_dir: Vector2,
-    pub id_: ID,
+    pub id_: DefaultKey,
 }
 
 impl Obstacle {

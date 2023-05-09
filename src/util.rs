@@ -1,9 +1,6 @@
 use crate::vector2::Vector2;
-use core::cmp::Ordering;
-use core::hash::Hash;
 use parry2d::bounding_volume::Aabb as AABB;
-use pi_slotmap::{Key, KeyData};
-use std::hash::Hasher;
+use pi_slotmap::DefaultKey;
 
 /// quad节点查询函数的范本，aabb是否相交，参数a是查询参数，参数b是quad节点的aabb， 所以最常用的判断是左闭右开
 /// 应用方为了功能和性能，应该实现自己需要的quad节点的查询函数， 比如点查询， 球查询， 视锥体查询...
@@ -14,7 +11,7 @@ pub fn intersects(a: &AABB, b: &AABB) -> bool {
 /// aabb的查询函数的参数
 pub struct AbQueryArgs {
     pub aabb: AABB,
-    pub result: Vec<(ID, Vec<Vector2>)>,
+    pub result: Vec<(DefaultKey, Vec<Vector2>)>,
 }
 impl AbQueryArgs {
     pub fn new(aabb: AABB) -> AbQueryArgs {
@@ -27,7 +24,7 @@ impl AbQueryArgs {
 
 /// ab节点的查询函数, 这里只是一个简单范本，使用了quad节点的查询函数intersects
 /// 应用方为了功能和性能，应该实现自己需要的ab节点的查询函数， 比如点查询， 球查询-包含或相交， 视锥体查询...
-pub fn ab_query_func(arg: &mut AbQueryArgs, id: ID, aabb: &AABB, bind: &Vec<Vector2>) {
+pub fn ab_query_func(arg: &mut AbQueryArgs, id: DefaultKey, aabb: &AABB, bind: &Vec<Vector2>) {
     // println!("ab_query_func: id: {}, bind:{:?}, arg: {:?}", id, bind, arg.result);
     if intersects(&arg.aabb, aabb) {
         arg.result.push((id, bind.clone()));
@@ -45,58 +42,4 @@ pub struct Line {
      * \brief     The direction of the directed line.
      */
     pub direction: Vector2,
-}
-
-#[derive(Debug, Clone, Copy, Default)]
-pub struct ID(pub f64);
-
-impl Ord for ID {
-    fn cmp(&self, other: &Self) -> Ordering {
-        let a = unsafe { std::mem::transmute::<f64, u64>(self.0) };
-        let b = unsafe { std::mem::transmute::<f64, u64>(other.0) };
-        a.cmp(&b)
-    }
-}
-
-impl PartialOrd for ID {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        let a = unsafe { std::mem::transmute::<f64, u64>(self.0) };
-        let b = unsafe { std::mem::transmute::<f64, u64>(other.0) };
-        a.partial_cmp(&b)
-    }
-}
-
-impl Hash for ID {
-    fn hash<H: Hasher>(&self, state: &mut H) {
-        let a = unsafe { std::mem::transmute::<f64, u64>(self.0) };
-        a.hash(state)
-    }
-}
-
-impl Eq for ID {}
-
-impl PartialEq for ID {
-    fn eq(&self, other: &Self) -> bool {
-        self.0 == other.0
-    }
-}
-
-impl From<KeyData> for ID {
-    fn from(data: KeyData) -> Self {
-        ID(unsafe { std::mem::transmute(data.as_ffi()) })
-    }
-}
-
-unsafe impl Key for ID {
-    fn data(&self) -> KeyData {
-        KeyData::from_ffi(unsafe { std::mem::transmute(self.0) })
-    }
-
-    fn null() -> Self {
-        ID(f64::MAX)
-    }
-
-    fn is_null(&self) -> bool {
-        self.0 == f64::MAX
-    }
 }

@@ -43,7 +43,7 @@ pub fn setup_scenario(sim: &mut RVOSimulator, goals: &mut Vec<Vector2>, agents: 
             (i as f32 * 2.0 * std::f32::consts::PI / NUM as f32).sin(),
         ) * TEMP;
 
-        agents.push(sim.add_agent(&pos));
+        agents.push(sim.add_agent(&Vector2::new(190., 190.)));
         // println!("-sim.getAgentPosition(i): {:?}", -sim.getAgentPosition(i));
         goals.push(-sim.get_agent_position(agents[i]).unwrap());
     }

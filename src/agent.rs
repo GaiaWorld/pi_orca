@@ -401,7 +401,7 @@ impl Agent {
     }
 
     pub fn get_agent_obstacle_neighbor(&self, neighbor_no: usize) -> f64 {
-        return unsafe { (&*self.obstacle_neighbors[neighbor_no].1).id_.0 };
+        return unsafe { std::mem::transmute((&*self.obstacle_neighbors[neighbor_no].1).id_) };
     }
 
     pub fn get_agent_orcaline(&self, line_no: usize) -> Line {

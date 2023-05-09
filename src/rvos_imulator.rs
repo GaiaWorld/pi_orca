@@ -1,23 +1,23 @@
 use crate::{
     agent::Agent,
     obstacle::Obstacle,
-    util::{ab_query_func, intersects, AbQueryArgs, Line, ID},
+    util::{ab_query_func, intersects, AbQueryArgs, Line},
     vector2::Vector2,
 };
 
 use nalgebra::Point2;
 use parry2d::bounding_volume::Aabb as AABB;
-use pi_slotmap::SlotMap;
+use pi_slotmap::{DefaultKey, SlotMap};
 use pi_spatial::{quad_helper::QuadTree, tilemap::TileMap};
 
 pub struct RVOSimulator {
-    agents_: SlotMap<ID, Agent>,
+    agents_: SlotMap<DefaultKey, Agent>,
     default_agent: Option<Agent>,
     pub global_time: f32,
-    obstacles_: SlotMap<ID, Obstacle>,
+    obstacles_: SlotMap<DefaultKey, Obstacle>,
     pub time_step: f32,
-    tile_map: TileMap<ID, i32>,
-    obstacles_map: QuadTree<ID, Vec<Vector2>>,
+    tile_map: TileMap<DefaultKey, i32>,
+    obstacles_map: QuadTree<DefaultKey, Vec<Vector2>>,
     id_num: usize,
 }
 
@@ -139,7 +139,7 @@ impl RVOSimulator {
 
         // let agent = Box::into_raw(Box::new(agent));
 
-        return id.0;
+        return unsafe { std::mem::transmute(id) };
     }
 
     pub fn add_agent2(
@@ -174,12 +174,13 @@ impl RVOSimulator {
 
         self.tile_map.add(id, ab, 0);
 
-        return id.0;
+        unsafe { std::mem::transmute(id) }
     }
 
     pub fn remove_agent(&mut self, id: f64) -> bool {
-        if let Some(_) = self.tile_map.remove(ID(id)) {
-            if let Some(_) = self.agents_.remove(ID(id)) {
+        let id = unsafe { std::mem::transmute(id) };
+        if let Some(_) = self.tile_map.remove(id) {
+            if let Some(_) = self.agents_.remove(id) {
                 return true;
             }
         }
@@ -224,7 +225,7 @@ impl RVOSimulator {
 
             let id = self.obstacles_.insert(obstacle);
             if let Some(o) = self.obstacles_.get_mut(id) {
-                o.id_ = id;
+                o.id_ = id
             }
             ids.push(id);
             // println!("obstacle: {:?}", obstacle);
@@ -258,11 +259,11 @@ impl RVOSimulator {
         let aabb = AABB::new(Point2::new(min_x, min_y), Point2::new(max_x, max_y));
         self.obstacles_map.add(id, aabb, vertices);
 
-        return id.0;
+        return unsafe { std::mem::transmute(id) };
     }
 
     pub fn remove_obstacle(&mut self, id: f64) -> bool {
-        let mut key = ID(id);
+        let mut key = unsafe { std::mem::transmute(id) };
 
         let mut temp = 0;
         loop {
@@ -349,14 +350,16 @@ impl RVOSimulator {
     }
 
     pub fn get_agent_agent_neighbor(&self, agent_no: f64, neighbor_no: usize) -> Option<f64> {
-        if let Some(v) = self.agents_.get(ID(agent_no)) {
+        let agent_no = unsafe { std::mem::transmute(agent_no) };
+        if let Some(v) = self.agents_.get(agent_no) {
             return Some(v.get_agent_agent_neighbor(neighbor_no));
         }
         None
     }
 
     pub fn get_agent_max_neighbors(&self, agent_no: f64) -> Option<usize> {
-        if let Some(v) = self.agents_.get(ID(agent_no)) {
+        let  agent_no = unsafe { std::mem::transmute(agent_no) };
+        if let Some(v) = self.agents_.get(agent_no) {
             return Some(v.max_neighbors);
         }
         None
@@ -364,84 +367,96 @@ impl RVOSimulator {
 
     pub fn get_agent_max_speed(&self, agent_no: f64) -> Option<f32> {
         // return self.agents_[agent_no].max_speed;
-        if let Some(v) = self.agents_.get(ID(agent_no)) {
+        let  agent_no = unsafe { std::mem::transmute(agent_no) };
+        if let Some(v) = self.agents_.get(agent_no) {
             return Some(v.max_speed);
         }
         None
     }
 
     pub fn get_agent_neighbor_dist(&self, agent_no: f64) -> Option<f32> {
-        if let Some(v) = self.agents_.get(ID(agent_no)) {
+        let agent_no = unsafe { std::mem::transmute(agent_no) };
+        if let Some(v) = self.agents_.get(agent_no) {
             return Some(v.neighbor_dist);
         }
         None
     }
 
     pub fn get_agent_num_agent_neighbors(&self, agent_no: f64) -> Option<usize> {
-        if let Some(v) = self.agents_.get(ID(agent_no)) {
+        let agent_no = unsafe { std::mem::transmute(agent_no) };
+        if let Some(v) = self.agents_.get(agent_no) {
             return Some(v.get_agent_num_agent_neighbors());
         }
         None
     }
 
     pub fn get_agent_num_obstacle_neighbors(&self, agent_no: f64) -> Option<usize> {
-        if let Some(v) = self.agents_.get(ID(agent_no)) {
+        let agent_no = unsafe { std::mem::transmute(agent_no) };
+        if let Some(v) = self.agents_.get(agent_no) {
             return Some(v.get_agent_num_obstacle_neighbors());
         }
         None
     }
 
     pub fn get_agent_num_orcalines(&self, agent_no: f64) -> Option<usize> {
-        if let Some(v) = self.agents_.get(ID(agent_no)) {
+        let  agent_no = unsafe { std::mem::transmute(agent_no) };
+        if let Some(v) = self.agents_.get(agent_no) {
             return Some(v.get_agent_num_orcalines());
         }
         None
     }
 
     pub fn get_agent_obstacle_neighbor(&self, agent_no: f64, neighbor_no: f64) -> Option<f64> {
-        if let Some(v) = self.agents_.get(ID(agent_no)) {
+        let  agent_no = unsafe { std::mem::transmute(agent_no) };
+        if let Some(v) = self.agents_.get(agent_no) {
             return Some(v.get_agent_obstacle_neighbor(neighbor_no as usize));
         }
         None
     }
 
     pub fn get_agent_position(&self, agent_no: f64) -> Option<Vector2> {
-        if let Some(v) = self.agents_.get(ID(agent_no)) {
+        let  agent_no = unsafe { std::mem::transmute(agent_no) };
+        if let Some(v) = self.agents_.get(agent_no) {
             return Some(v.position_);
         }
         None
     }
 
     pub fn get_agent_pref_velocity(&self, agent_no: f64) -> Option<Vector2> {
-        if let Some(v) = self.agents_.get(ID(agent_no)) {
+        let  agent_no = unsafe { std::mem::transmute(agent_no) };
+        if let Some(v) = self.agents_.get(agent_no) {
             return Some(v.pref_velocity);
         }
         None
     }
 
     pub fn get_agent_radius(&self, agent_no: f64) -> Option<f32> {
-        if let Some(v) = self.agents_.get(ID(agent_no)) {
+        let  agent_no = unsafe { std::mem::transmute(agent_no) };
+        if let Some(v) = self.agents_.get(agent_no) {
             return Some(v.radius_);
         }
         None
     }
 
     pub fn get_agent_time_horizon(&self, agent_no: f64) -> Option<f32> {
-        if let Some(v) = self.agents_.get(ID(agent_no)) {
+        let  agent_no = unsafe { std::mem::transmute(agent_no) };
+        if let Some(v) = self.agents_.get(agent_no) {
             return Some(v.time_horizon);
         }
         None
     }
 
     pub fn get_agent_time_horizon_obst(&self, agent_no: f64) -> Option<f32> {
-        if let Some(v) = self.agents_.get(ID(agent_no)) {
+        let  agent_no = unsafe { std::mem::transmute(agent_no) };
+        if let Some(v) = self.agents_.get(agent_no) {
             return Some(v.time_horizon);
         }
         None
     }
 
     pub fn get_agent_velocity(&self, agent_no: f64) -> Option<Vector2> {
-        if let Some(v) = self.agents_.get(ID(agent_no)) {
+        let  agent_no = unsafe { std::mem::transmute(agent_no) };
+        if let Some(v) = self.agents_.get(agent_no) {
             return Some(v.velocity_);
         }
         None
@@ -460,25 +475,28 @@ impl RVOSimulator {
     }
 
     pub fn get_obstacle_vertex(&self, vertex_no: f64) -> Option<Vector2> {
-        if let Some(v) = self.obstacles_.get(ID(vertex_no)) {
+        let key = unsafe { std::mem::transmute(vertex_no) };
+        if let Some(v) = self.obstacles_.get(key) {
             return Some(v.point_);
         }
         None
     }
 
     pub fn get_next_obstacle_vertex_no(&self, vertex_no: f64) -> Option<f64> {
-        if let Some(v) = self.obstacles_.get(ID(vertex_no)) {
+        let key = unsafe { std::mem::transmute(vertex_no) };
+        if let Some(v) = self.obstacles_.get(key) {
             if let Some(next_obstacle) = self.obstacles_.get(v.next_obstacle) {
-                return Some(next_obstacle.id_.0);
+                return Some(unsafe { std::mem::transmute(next_obstacle.id_) });
             }
         }
         None
     }
 
     pub fn get_prev_obstacle_vertex_no(&self, vertex_no: f64) -> Option<f64> {
-        if let Some(v) = self.obstacles_.get(ID(vertex_no)) {
+        let key = unsafe { std::mem::transmute(vertex_no) };
+        if let Some(v) = self.obstacles_.get(key) {
             if let Some(prev_obstacle) = self.obstacles_.get(v.prev_obstacle) {
-                return Some(prev_obstacle.id_.0);
+                return Some(unsafe { std::mem::transmute(prev_obstacle.id_) });
             }
         }
         None
@@ -489,7 +507,8 @@ impl RVOSimulator {
     }
 
     pub fn set_agent_max_neighbors(&mut self, agent_no: f64, max_neighbors: usize) -> bool {
-        if let Some(agent) = self.agents_.get_mut(ID(agent_no)) {
+        let  agent_no = unsafe { std::mem::transmute(agent_no) };
+        if let Some(agent) = self.agents_.get_mut(agent_no) {
             agent.max_neighbors = max_neighbors;
             return true;
         }
@@ -497,7 +516,8 @@ impl RVOSimulator {
     }
 
     pub fn set_agent_max_speed(&mut self, agent_no: f64, max_speed: f32) -> bool {
-        if let Some(agent) = self.agents_.get_mut(ID(agent_no)) {
+        let  agent_no = unsafe { std::mem::transmute(agent_no) };
+        if let Some(agent) = self.agents_.get_mut(agent_no) {
             agent.max_speed = max_speed;
             return true;
         }
@@ -505,7 +525,8 @@ impl RVOSimulator {
     }
 
     pub fn set_agent_neighbor_dist(&mut self, agent_no: f64, neighbor_dist: f32) -> bool {
-        if let Some(agent) = self.agents_.get_mut(ID(agent_no)) {
+        let  agent_no = unsafe { std::mem::transmute(agent_no) };
+        if let Some(agent) = self.agents_.get_mut(agent_no) {
             agent.neighbor_dist = neighbor_dist;
             return true;
         }
@@ -513,7 +534,8 @@ impl RVOSimulator {
     }
 
     pub fn set_agent_position(&mut self, agent_no: f64, position: &Vector2) -> bool {
-        if let Some(agent) = self.agents_.get_mut(ID(agent_no)) {
+        let  agent_no = unsafe { std::mem::transmute(agent_no) };
+        if let Some(agent) = self.agents_.get_mut(agent_no) {
             agent.position_ = *position;
             return true;
         }
@@ -521,7 +543,8 @@ impl RVOSimulator {
     }
 
     pub fn set_agent_pref_velocity(&mut self, agent_no: f64, pref_velocity: &Vector2) -> bool {
-        if let Some(agent) = self.agents_.get_mut(ID(agent_no)) {
+        let  agent_no = unsafe { std::mem::transmute(agent_no) };
+        if let Some(agent) = self.agents_.get_mut(agent_no) {
             agent.pref_velocity = *pref_velocity;
             return true;
         }
@@ -529,7 +552,8 @@ impl RVOSimulator {
     }
 
     pub fn set_agent_radius(&mut self, agent_no: f64, radius: f32) -> bool {
-        if let Some(agent) = self.agents_.get_mut(ID(agent_no)) {
+        let  agent_no = unsafe { std::mem::transmute(agent_no) };
+        if let Some(agent) = self.agents_.get_mut(agent_no) {
             agent.radius_ = radius;
             return true;
         }
@@ -537,7 +561,8 @@ impl RVOSimulator {
     }
 
     pub fn set_agent_time_horizon(&mut self, agent_no: f64, time_horizon: f32) -> bool {
-        if let Some(agent) = self.agents_.get_mut(ID(agent_no)) {
+        let  agent_no = unsafe { std::mem::transmute(agent_no) };
+        if let Some(agent) = self.agents_.get_mut(agent_no) {
             agent.time_horizon = time_horizon;
             return true;
         }
@@ -545,7 +570,8 @@ impl RVOSimulator {
     }
 
     pub fn set_agent_time_horizon_obst(&mut self, agent_no: f64, time_horizon_obst: f32) -> bool {
-        if let Some(agent) = self.agents_.get_mut(ID(agent_no)) {
+        let  agent_no = unsafe { std::mem::transmute(agent_no) };
+        if let Some(agent) = self.agents_.get_mut(agent_no) {
             agent.time_horizon_obst = time_horizon_obst;
             return true;
         }
@@ -553,7 +579,8 @@ impl RVOSimulator {
     }
 
     pub fn set_agent_velocity(&mut self, agent_no: f64, velocity: &Vector2) -> bool {
-        if let Some(agent) = self.agents_.get_mut(ID(agent_no)) {
+        let  agent_no = unsafe { std::mem::transmute(agent_no) };
+        if let Some(agent) = self.agents_.get_mut(agent_no) {
             agent.velocity_ = *velocity;
             return true;
         }
@@ -569,7 +596,7 @@ impl RVOSimulator {
      * @param[in] ab   当前代理的AABB
      * @return         返回邻居代理的ID集合
      */
-    pub fn compute_neighbors_aabb(&mut self, ab: AABB) -> Vec<ID> {
+    pub fn compute_neighbors_aabb(&mut self, ab: AABB) -> Vec<DefaultKey> {
         let mut r = vec![];
         let tree = &self.tile_map;
         let (_len, iter) = tree.query_iter(&ab);
@@ -592,7 +619,7 @@ impl RVOSimulator {
      * @param[in] ab   当前代理的AABB
      * @return         返回障碍物的数据集合
      */
-    pub fn compute_obstacle_aabb(&mut self, ab: AABB) -> Vec<(ID, Vec<Vector2>)> {
+    pub fn compute_obstacle_aabb(&mut self, ab: AABB) -> Vec<(DefaultKey, Vec<Vector2>)> {
         let mut r = vec![];
         let tree = &self.obstacles_map;
         let mut args = AbQueryArgs::new(ab.clone());
@@ -605,14 +632,14 @@ impl RVOSimulator {
         r
     }
 
-    pub fn get_obstacle(&self, obstacle_no: ID) -> Option<*const Obstacle> {
+    pub fn get_obstacle(&self, obstacle_no: DefaultKey) -> Option<*const Obstacle> {
         if let Some(v) = self.obstacles_.get(obstacle_no) {
             return Some(v);
         }
         None
     }
 
-    pub fn get_agent(&mut self, agent_no: ID) -> Option<*mut Agent> {
+    pub fn get_agent(&mut self, agent_no: DefaultKey) -> Option<*mut Agent> {
         if let Some(v) = self.agents_.get_mut(agent_no) {
             return Some(v);
         }
@@ -620,7 +647,8 @@ impl RVOSimulator {
     }
 
     pub fn get_agent_orcaline(&self, agent_no: f64, line_no: usize) -> Option<Line> {
-        if let Some(v) = self.agents_.get(ID(agent_no)) {
+        let  agent_no = unsafe { std::mem::transmute(agent_no) };
+        if let Some(v) = self.agents_.get(agent_no) {
             return Some(v.get_agent_orcaline(line_no));
         }
         None
