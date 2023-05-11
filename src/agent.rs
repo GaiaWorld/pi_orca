@@ -788,6 +788,7 @@ impl Agent {
                 // 还未到达目标点
                 id = 0;
             } else {
+                self.position_ = goal_position;
                 // 已经到达目标点
                 id = 2;
             }
