@@ -13,10 +13,10 @@
     import init from './pkg/pi_orca.js';
     import { RVOSimulator } from './pkg/pi_orca.js';
 
-    const temp = 200;
-    const num = 150;
+    const temp = 100;
+    const num = 50;
     const remove_id = num / 2;
-    const maxSpeed = 2.0;
+    const maxSpeed = 4.0;
     let lastpotion = [];
 
     let is_remove = false;
@@ -32,6 +32,10 @@
 
       sub(other) {
         return Vector2.new(this.x - other.x, this.y - other.y);
+      }
+
+      mul_number(other) {
+        return Vector2.new(this.x * other, this.y * other);
       }
 
       static abs_sq(other) {
@@ -64,18 +68,19 @@
         divs[i].style.backgroundColor = "rgb(" + Math.floor(i / num * 256) + ", 0, 0)";
         // console.log(Math.floor(1 / num * 256));
         divs[i].style.position = "absolute";
+        divs[i].id = "div" + i;
         document.body.appendChild(divs[i]);
 
         agents[i] = sim.add_agent(new Float32Array([x, y]));
         // console.log("-sim.getAgentPosition(i): ", sim.get_agent_position(i).neg());
-
-        goals[i] = Vector2.new(-x, -y);
+        sim.set_agent_goal(agents[i], new Float32Array([-x, -y]));
       }
 
     }
 
     function update_visualization(sim, divs, agents) {
       console.log("{}", sim.get_global_time());
+      let result = true;
       for (let i = 0; i < num; i++) {
         if (i == remove_id && is_remove) {
           continue;
@@ -85,6 +90,10 @@
 
         // lastpotion[i] = position;
         // console.log("Agent: " + i + "; x: " + position.x() + "; y: " + position.y());
+        // let velocity = sim.get_agent_velocity(agents[i]);
+        // let pref_velocity = sim.get_agent_pref_velocity(agents[i]);
+        // console.log("role", agents[i], "当前速度：", velocity.x, velocity.y)
+        // console.log("role", agents[i], "期望速度：", pref_velocity.x, pref_velocity.y)
 
         let x = Math.floor(position.x) + temp;
         let y = Math.floor(position.y) + temp;
@@ -93,53 +102,55 @@
         divs[i].style.left = x + "px";
         divs[i].style.top = y + "px";
         // console.log("divs[i]: ", divs[i]);
-      }
-      // console.log(log);
-    }
 
-    function set_preferred_velocities(sim, goals, agents) {
-      /*
-       * Set the preferred velocity to be a vector of unit magnitude (speed) in the
-       * direction of the goal.
-       */
-
-      for (let i = 0; i < num; i++) {
-        if (i == remove_id && is_remove) {
-          continue;
-        }
-        let goal_vector = goals[i].sub(sim.get_agent_position(agents[i]));
-
-        if (Vector2.abs_sq(goal_vector) > 1) {
-          goal_vector = Vector2.normalize(goal_vector);
-        }
-
-        sim.set_agent_pref_velocity(agents[i], new Float32Array([goal_vector.x, goal_vector.y]));
-      }
-    }
-
-    function reached_goal(sim, goals) {
-      /* Check if all agents have reached their goals. */
-      for (let i = 0; i < num; i++) {
-        if (i == remove_id && is_remove) {
-          continue;
-        }
-        let position = sim.get_agent_position(i);
-        if (Vector2.abs_sq(goals[i].sub(sim.get_agent_position(agents[i]))) > 2) {
-          // if (sim.get_global_time() > 866) {
-          //   console.log("i: ", i);
-          //   console.log("sim.getAgentPosition(i): ", sim.get_agent_position(i).x(), " ", sim.get_agent_position(i).y());
-          //   console.log("goals[i]: ", goals[i].x(), ", ", goals[i].y());
-          //   console.log("sim.getAgentRadius(i): ", sim.get_agent_radius(i));
-          //   console.log("sim.getGlobalTime(): ", sim.get_global_time());
-          //   console.log("Vector2.absSq((sim.getAgentPosition().sub(goals[i])))`", Vector2.absSq((sim.get_agent_position().sub(goals[i]))));
-          //   console.log("sim.getAgentPosition().sub(goals[i]))", sim.get_agent_position().sub(goals[i]));
-          // }
-          return false;
+        // console.log("Agent: " + i + "; x: " + position.x + "; y: " + position.y);
+        let goal = sim.get_agent_goal(agents[i]);
+        console.log("goal: ", goal);
+        if (goal) {
+          let max_speed = sim.get_agent_max_speed(agents[i]);
+          // console.log("max_speed: ", max_speed);
+          let custom_speed = sim.get_agent_custom_speed(agents[i]);
+          // console.log("custom_speed: ", custom_speed);
+          let speed = max_speed > custom_speed ? custom_speed : max_speed;
+          // console.log("speed: ", speed);
+          let position = sim.get_agent_position(agents[i]);
+          // console.log("position: ", position);
+          let dist_pos = Vector2.new(goal.x, goal.y).sub(Vector2.new(position.x, position.y));
+          // console.log("dist_pos: ", dist_pos);
+          let dist_sq = Vector2.abs_sq(dist_pos);
+          // console.log("dist_sq: ", dist_sq);
+          let velocity = Vector2.normalize(dist_pos).mul_number(speed * sim.get_time_step());
+          // console.log("velocity: ", velocity);
+          // console.log("Vector2.abs_sq(velocity): ", Vector2.abs_sq(velocity));
+          if (dist_sq > Vector2.abs_sq(velocity)) {
+            // pref_velocity = velocity;
+            // 还未到达目标点
+            result = false;
+          }
         }
       }
 
-      return true;
+      if (result) {
+        console.log("到达目标点");
+      }
+      return result;
     }
+
+    // function reached_goal(sim, goals) {
+    //   /* Check if all agents have reached their goals. */
+    //   for (let i = 0; i < num; i++) {
+    //     if (i == remove_id && is_remove) {
+    //       continue;
+    //     }
+    //     let position = sim.get_agent_position(i);
+    //     if (Vector2.abs_sq(goals[i].sub(sim.get_agent_position(agents[i]))) > 2) {
+
+    //       return false;
+    //     }
+    //   }
+
+    //   return true;
+    // }
 
     init().then(module => {
       // 在这里调用 Rust 函数
@@ -157,21 +168,11 @@
       let r = 0;
       let id = setInterval(() => {
         let begin = performance.now();
-        // console.log("num: ", r++);
-        update_visualization(sim, divs, agents);
-
-        set_preferred_velocities(sim, goals, agents);
-        sim.do_step();
-        // if (performance.now() - begin > 5 * 1000) {
-        // if (!is_remove) {
-        //   let r = sim.remove_agent(remove_id);
-        //   is_remove = true;
-        // }
-        // }
-        console.log("======= time: ", performance.now() - begin);
-        // if (reached_goal(sim, goals)) {
-        //   clearInterval(id);
-        // }
+        if (update_visualization(sim, divs, agents)){
+          clearInterval(id);
+        }
+        let res = sim.do_step();
+        console.log("======= time: ", performance.now() - begin, " res: " + res);
       }, 16)
     });
 

@@ -283,22 +283,35 @@ impl RVOSimulator {
         false
     }
 
-    pub fn do_step(&mut self) {
+    pub fn do_step(&mut self) -> bool {
         self.update_tree();
 
         let mut obstacle_num = Vec::with_capacity(self.agents_.len());
+        let mut res = true;
+
         for (_id, agents) in &mut self.agents_ {
-            agents.compute_neighbors();
-            obstacle_num.push(agents.compute_obstacle_orca());
+            let id = agents.compute_pref_velocity();
+            if id != 2 {
+                res = false;
+            }
         }
 
-        let mut index = 0;
-        for (_id, agents) in &mut self.agents_ {
-            agents.compute_new_velocity(obstacle_num[index]);
-            index += 1;
+        if !res {
+            for (_id, agents) in &mut self.agents_ {
+                agents.compute_neighbors();
+                obstacle_num.push(agents.compute_obstacle_orca());
+            }
+
+            let mut index = 0;
+            for (_id, agents) in &mut self.agents_ {
+                agents.compute_new_velocity(obstacle_num[index]);
+                index += 1;
+            }
+
+            self.global_time += self.time_step;
         }
 
-        self.global_time += self.time_step;
+        res
     }
 
     fn update_tree(&mut self) {
@@ -358,7 +371,7 @@ impl RVOSimulator {
     }
 
     pub fn get_agent_max_neighbors(&self, agent_no: f64) -> Option<usize> {
-        let  agent_no = unsafe { std::mem::transmute(agent_no) };
+        let agent_no = unsafe { std::mem::transmute(agent_no) };
         if let Some(v) = self.agents_.get(agent_no) {
             return Some(v.max_neighbors);
         }
@@ -367,7 +380,7 @@ impl RVOSimulator {
 
     pub fn get_agent_max_speed(&self, agent_no: f64) -> Option<f32> {
         // return self.agents_[agent_no].max_speed;
-        let  agent_no = unsafe { std::mem::transmute(agent_no) };
+        let agent_no = unsafe { std::mem::transmute(agent_no) };
         if let Some(v) = self.agents_.get(agent_no) {
             return Some(v.max_speed);
         }
@@ -399,7 +412,7 @@ impl RVOSimulator {
     }
 
     pub fn get_agent_num_orcalines(&self, agent_no: f64) -> Option<usize> {
-        let  agent_no = unsafe { std::mem::transmute(agent_no) };
+        let agent_no = unsafe { std::mem::transmute(agent_no) };
         if let Some(v) = self.agents_.get(agent_no) {
             return Some(v.get_agent_num_orcalines());
         }
@@ -407,7 +420,7 @@ impl RVOSimulator {
     }
 
     pub fn get_agent_obstacle_neighbor(&self, agent_no: f64, neighbor_no: f64) -> Option<f64> {
-        let  agent_no = unsafe { std::mem::transmute(agent_no) };
+        let agent_no = unsafe { std::mem::transmute(agent_no) };
         if let Some(v) = self.agents_.get(agent_no) {
             return Some(v.get_agent_obstacle_neighbor(neighbor_no as usize));
         }
@@ -415,7 +428,7 @@ impl RVOSimulator {
     }
 
     pub fn get_agent_position(&self, agent_no: f64) -> Option<Vector2> {
-        let  agent_no = unsafe { std::mem::transmute(agent_no) };
+        let agent_no = unsafe { std::mem::transmute(agent_no) };
         if let Some(v) = self.agents_.get(agent_no) {
             return Some(v.position_);
         }
@@ -423,7 +436,7 @@ impl RVOSimulator {
     }
 
     pub fn get_agent_pref_velocity(&self, agent_no: f64) -> Option<Vector2> {
-        let  agent_no = unsafe { std::mem::transmute(agent_no) };
+        let agent_no = unsafe { std::mem::transmute(agent_no) };
         if let Some(v) = self.agents_.get(agent_no) {
             return Some(v.pref_velocity);
         }
@@ -431,7 +444,7 @@ impl RVOSimulator {
     }
 
     pub fn get_agent_radius(&self, agent_no: f64) -> Option<f32> {
-        let  agent_no = unsafe { std::mem::transmute(agent_no) };
+        let agent_no = unsafe { std::mem::transmute(agent_no) };
         if let Some(v) = self.agents_.get(agent_no) {
             return Some(v.radius_);
         }
@@ -439,7 +452,7 @@ impl RVOSimulator {
     }
 
     pub fn get_agent_time_horizon(&self, agent_no: f64) -> Option<f32> {
-        let  agent_no = unsafe { std::mem::transmute(agent_no) };
+        let agent_no = unsafe { std::mem::transmute(agent_no) };
         if let Some(v) = self.agents_.get(agent_no) {
             return Some(v.time_horizon);
         }
@@ -447,7 +460,7 @@ impl RVOSimulator {
     }
 
     pub fn get_agent_time_horizon_obst(&self, agent_no: f64) -> Option<f32> {
-        let  agent_no = unsafe { std::mem::transmute(agent_no) };
+        let agent_no = unsafe { std::mem::transmute(agent_no) };
         if let Some(v) = self.agents_.get(agent_no) {
             return Some(v.time_horizon);
         }
@@ -455,7 +468,7 @@ impl RVOSimulator {
     }
 
     pub fn get_agent_velocity(&self, agent_no: f64) -> Option<Vector2> {
-        let  agent_no = unsafe { std::mem::transmute(agent_no) };
+        let agent_no = unsafe { std::mem::transmute(agent_no) };
         if let Some(v) = self.agents_.get(agent_no) {
             return Some(v.velocity_);
         }
@@ -507,7 +520,7 @@ impl RVOSimulator {
     }
 
     pub fn set_agent_max_neighbors(&mut self, agent_no: f64, max_neighbors: usize) -> bool {
-        let  agent_no = unsafe { std::mem::transmute(agent_no) };
+        let agent_no = unsafe { std::mem::transmute(agent_no) };
         if let Some(agent) = self.agents_.get_mut(agent_no) {
             agent.max_neighbors = max_neighbors;
             return true;
@@ -516,7 +529,7 @@ impl RVOSimulator {
     }
 
     pub fn set_agent_max_speed(&mut self, agent_no: f64, max_speed: f32) -> bool {
-        let  agent_no = unsafe { std::mem::transmute(agent_no) };
+        let agent_no = unsafe { std::mem::transmute(agent_no) };
         if let Some(agent) = self.agents_.get_mut(agent_no) {
             agent.max_speed = max_speed;
             return true;
@@ -525,7 +538,7 @@ impl RVOSimulator {
     }
 
     pub fn set_agent_neighbor_dist(&mut self, agent_no: f64, neighbor_dist: f32) -> bool {
-        let  agent_no = unsafe { std::mem::transmute(agent_no) };
+        let agent_no = unsafe { std::mem::transmute(agent_no) };
         if let Some(agent) = self.agents_.get_mut(agent_no) {
             agent.neighbor_dist = neighbor_dist;
             return true;
@@ -534,7 +547,7 @@ impl RVOSimulator {
     }
 
     pub fn set_agent_position(&mut self, agent_no: f64, position: &Vector2) -> bool {
-        let  agent_no = unsafe { std::mem::transmute(agent_no) };
+        let agent_no = unsafe { std::mem::transmute(agent_no) };
         if let Some(agent) = self.agents_.get_mut(agent_no) {
             agent.position_ = *position;
             return true;
@@ -543,7 +556,7 @@ impl RVOSimulator {
     }
 
     pub fn set_agent_pref_velocity(&mut self, agent_no: f64, pref_velocity: &Vector2) -> bool {
-        let  agent_no = unsafe { std::mem::transmute(agent_no) };
+        let agent_no = unsafe { std::mem::transmute(agent_no) };
         if let Some(agent) = self.agents_.get_mut(agent_no) {
             agent.pref_velocity = *pref_velocity;
             return true;
@@ -552,7 +565,7 @@ impl RVOSimulator {
     }
 
     pub fn set_agent_radius(&mut self, agent_no: f64, radius: f32) -> bool {
-        let  agent_no = unsafe { std::mem::transmute(agent_no) };
+        let agent_no = unsafe { std::mem::transmute(agent_no) };
         if let Some(agent) = self.agents_.get_mut(agent_no) {
             agent.radius_ = radius;
             return true;
@@ -560,8 +573,39 @@ impl RVOSimulator {
         false
     }
 
+    /**
+     * @brief     为代理设置目标点。
+     * @param[in] agent_no   代理id
+     * @param[in] goal       目标点
+     * @return 设置成功返回true，失败返回false。
+     */
+    pub fn set_agent_goal(&mut self, agent_no: f64, goal: &[f32]) -> bool {
+        let goal = Some(Vector2::new(goal[0], goal[1]));
+        let agent_no = unsafe { std::mem::transmute(agent_no) };
+        if let Some(agent) = self.agents_.get_mut(agent_no) {
+            agent.goal_position = goal;
+            return true;
+        }
+        false
+    }
+
+    /**
+     * @brief     为代理设置自定义速度。
+     * @param[in] agent_no   代理id
+     * @param[in] speed      速度，应该小于代理的最大速度，否则使用最大速度。
+     * @return 设置成功返回true，失败返回false。
+     */
+    pub fn set_agent_custom_speed(&mut self, agent_no: f64, speed: f32) -> bool {
+        let agent_no = unsafe { std::mem::transmute(agent_no) };
+        if let Some(agent) = self.agents_.get_mut(agent_no) {
+            agent.custom_speed = Some(speed);
+            return true;
+        }
+        false
+    }
+
     pub fn set_agent_time_horizon(&mut self, agent_no: f64, time_horizon: f32) -> bool {
-        let  agent_no = unsafe { std::mem::transmute(agent_no) };
+        let agent_no = unsafe { std::mem::transmute(agent_no) };
         if let Some(agent) = self.agents_.get_mut(agent_no) {
             agent.time_horizon = time_horizon;
             return true;
@@ -570,7 +614,7 @@ impl RVOSimulator {
     }
 
     pub fn set_agent_time_horizon_obst(&mut self, agent_no: f64, time_horizon_obst: f32) -> bool {
-        let  agent_no = unsafe { std::mem::transmute(agent_no) };
+        let agent_no = unsafe { std::mem::transmute(agent_no) };
         if let Some(agent) = self.agents_.get_mut(agent_no) {
             agent.time_horizon_obst = time_horizon_obst;
             return true;
@@ -579,7 +623,7 @@ impl RVOSimulator {
     }
 
     pub fn set_agent_velocity(&mut self, agent_no: f64, velocity: &Vector2) -> bool {
-        let  agent_no = unsafe { std::mem::transmute(agent_no) };
+        let agent_no = unsafe { std::mem::transmute(agent_no) };
         if let Some(agent) = self.agents_.get_mut(agent_no) {
             agent.velocity_ = *velocity;
             return true;
@@ -647,9 +691,25 @@ impl RVOSimulator {
     }
 
     pub fn get_agent_orcaline(&self, agent_no: f64, line_no: usize) -> Option<Line> {
-        let  agent_no = unsafe { std::mem::transmute(agent_no) };
+        let agent_no = unsafe { std::mem::transmute(agent_no) };
         if let Some(v) = self.agents_.get(agent_no) {
             return Some(v.get_agent_orcaline(line_no));
+        }
+        None
+    }
+
+    pub fn get_agent_goal(&mut self, agent_no: f64) -> Option<Vector2> {
+        let agent_no = unsafe { std::mem::transmute(agent_no) };
+        if let Some(agent) = self.agents_.get(agent_no) {
+            return agent.goal_position;
+        }
+        None
+    }
+
+    pub fn get_agent_custom_speed(&mut self, agent_no: f64) -> Option<f32> {
+        let agent_no = unsafe { std::mem::transmute(agent_no) };
+        if let Some(agent) = self.agents_.get(agent_no) {
+            return agent.custom_speed;
         }
         None
     }

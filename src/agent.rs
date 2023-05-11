@@ -27,6 +27,8 @@ pub struct Agent {
     pub is_static: bool,
     is_computed: bool,
     pub id_: usize,
+    pub goal_position: Option<Vector2>,
+    pub custom_speed: Option<f32>,
 }
 
 impl Agent {
@@ -49,6 +51,8 @@ impl Agent {
             id_: 0,
             is_computed: false,
             is_static: false,
+            goal_position: None,
+            custom_speed: None,
         }
     }
 
@@ -760,6 +764,36 @@ impl Agent {
         }
 
         self.orca_lines.len()
+    }
+
+    pub fn compute_pref_velocity(&mut self) -> u8 {
+        // 未设置目标点
+        let mut id = 1;
+        let mut pref_velocity = Vector2::new(0.0, 0.0);
+        if let Some(goal_position) = self.goal_position {
+            let speed =
+                if self.custom_speed.is_some() && self.max_speed > self.custom_speed.unwrap() {
+                    self.custom_speed.unwrap()
+                } else {
+                    self.max_speed
+                };
+            let dist_pos = goal_position.sub(&self.position_);
+            let dist_sq = Vector2::abs_sq(&dist_pos);
+
+            let velocity = Vector2::normalize(&dist_pos)
+                .mul_number(speed)
+                .mul_number((unsafe { &*self.sim_ }).time_step);
+            if dist_sq > Vector2::abs_sq(&velocity) {
+                pref_velocity = velocity;
+                // 还未到达目标点
+                id = 0;
+            } else {
+                // 已经到达目标点
+                id = 2;
+            }
+        }
+        self.pref_velocity = pref_velocity;
+        id
     }
 }
 

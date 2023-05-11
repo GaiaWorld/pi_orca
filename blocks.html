@@ -49,7 +49,7 @@
       sim.set_time_step(0.25);
 
       /* Specify the default parameters for agents that are subsequently added. */
-      sim.set_agent_defaults(5.0, 10000, 5.0, 5.0, 2.5, 2.0, new Float32Array([0.0, 0.0]));
+      sim.set_agent_defaults(5.0, 10000, 5.0, 5.0, 2.5, 4.0, new Float32Array([0.0, 0.0]));
 
       /*
        * Add agents, specifying their start position, and store their goals on the
@@ -63,7 +63,7 @@
           let x = 55.0 + i * 10.0;
           let y = 55.0 + j * 10.0;
           agents.push(sim.add_agent(new Float32Array([x, y])));
-          goals.push(Vector2.new(-x, -y));
+          sim.set_agent_goal(agents[agents.length - 1], new Float32Array([-x, -y]));
 
           divs[id] = document.createElement("div");
           divs[id].id = id;
@@ -80,7 +80,7 @@
           x = -55.0 - i * 10.0;
           y = 55.0 + j * 10.0;
           agents.push(sim.add_agent(new Float32Array([x, y])));
-          goals.push(Vector2.new(-x, -y));
+          sim.set_agent_goal(agents[agents.length - 1], new Float32Array([-x, -y]));
 
           divs[id] = document.createElement("div");
           divs[id].id = id;
@@ -97,7 +97,7 @@
           x = 55.0 + i * 10.0;
           y = -55.0 - j * 10.0;
           agents.push(sim.add_agent(new Float32Array([x, y])));
-          goals.push(Vector2.new(-x, -y));
+          sim.set_agent_goal(agents[agents.length - 1], new Float32Array([-x, -y]));
           divs[id] = document.createElement("div");
           divs[id].id = id;
           divs[id].style.left = Math.floor(x + temp) + "px";
@@ -113,7 +113,7 @@
           x = -55.0 - i * 10.0;
           y = -55.0 - j * 10.0;
           agents.push(sim.add_agent(new Float32Array([x, y])));
-          goals.push(Vector2.new(-x, -y));
+          sim.set_agent_goal(agents[agents.length - 1], new Float32Array([-x, -y]));
           divs[id] = document.createElement("div");
           divs[id].id = id;
           divs[id].style.left = Math.floor(x + temp) + "px";
@@ -232,7 +232,7 @@
           goal_vector = Vector2.normalize(goal_vector);
         }
         // console.log("========= goal_vector", goal_vector.x(), goal_vector.y());
-        sim.set_agent_pref_velocity(agents[i], new Float32Array([goal_vector.x, goal_vector.y]) );
+        sim.set_agent_pref_velocity(agents[i], new Float32Array([goal_vector.x, goal_vector.y]));
 
         /*
         * Perturb a little to avoid deadlocks due to perfect symmetry.
@@ -274,21 +274,21 @@
       let global_time = 0;
       let num = 0
       let id = setInterval(() => {
-        if (num++ > 1000) {
-          clearInterval(id);
-          console.log("======= global_time: ", global_time);
-        }
+        // if (num++ > 1000) {
+        //   clearInterval(id);
+        //   console.log("======= global_time: ", global_time);
+        // }
         let begin = performance.now();
         // console.log("num: ", r++);
         update_visualization(sim, divs, agents);
 
-        set_preferred_velocities(sim, goals, agents);
+        // set_preferred_velocities(sim, goals, agents);
         sim.do_step();
 
         // console.log("======= time: ", performance.now() - begin);
-        if (reached_goal(sim, goals, agents)) {
-          clearInterval(id);
-        }
+        // if (reached_goal(sim, goals, agents)) {
+          // clearInterval(id);
+        // }
         global_time += performance.now() - begin;
       }, 16)
 

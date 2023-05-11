@@ -89,7 +89,7 @@ impl RVOSimulator {
         self.0.remove_obstacle(id)
     }
 
-    pub fn do_step(&mut self) {
+    pub fn do_step(&mut self)->bool {
         self.0.do_step()
     }
 
@@ -264,99 +264,34 @@ impl RVOSimulator {
     pub fn set_time_step(&mut self, time_step: f32) {
         self.0.set_time_step(time_step)
     }
+
+    /**
+     * @brief     为代理设置目标点。
+     * @param[in] agent_no   代理id
+     * @param[in] goal       目标点
+     * @return 设置成功返回true，失败返回false。
+     */
+    pub fn set_agent_goal(&mut self, agent_no: f64, goal: &[f32]) -> bool {
+        self.0.set_agent_goal(agent_no, goal)
+    }
+
+    /**
+     * @brief     为代理设置自定义速度。
+     * @param[in] agent_no   代理id
+     * @param[in] speed      速度，应该小于代理的最大速度，否则使用最大速度。
+     * @return 设置成功返回true，失败返回false。
+     */
+    pub fn set_agent_custom_speed(&mut self, agent_no: f64, speed: f32) -> bool {
+        self.0.set_agent_custom_speed(agent_no, speed)
+    }
+
+    pub fn get_agent_goal(&mut self, agent_no: f64) -> JsValue {
+        let v = self.0.get_agent_goal(agent_no);
+        to_value(&v).unwrap()
+    }
+
+    pub fn get_agent_custom_speed(&mut self, agent_no: f64) -> Option<f32> {
+        self.0.get_agent_custom_speed(agent_no)
+    }
 }
 
-// #[wasm_bindgen]
-// pub struct Vector2(Vector2Inner);
-
-// impl Vector2 {
-//     pub fn default() -> JsValue {
-//         JsValue::from(Self(Vector2Inner::default()))
-//     }
-
-//     pub fn new(x: f32, y: f32) -> JsValue {
-//         JsValue::from(Self(Vector2Inner::new(x, y)))
-//     }
-
-//     pub fn x(&self) -> f32 {
-//         self.0.x()
-//     }
-
-//     pub fn y(&self) -> f32 {
-//         self.0.y()
-//     }
-
-//     pub fn add(&self, other: JsValue) -> Vector2 {
-//         let other: Vector2 = other.into();
-//         JsValue::from_serde(Self(self.0.add(&other.0)))
-//     }
-
-//     pub fn sub(&self, other: &Vector2) -> Vector2 {
-//         Self(self.0.sub(&other.0))
-//     }
-
-//     pub fn mul(&self, other: &Vector2) -> f32 {
-//         self.0.mul(&other.0)
-//     }
-
-//     pub fn mul_number(&self, other: f32) -> Vector2 {
-//         Self(self.0.mul_number(other))
-//     }
-
-//     pub fn div(&self, other: f32) -> Vector2 {
-//         Self(self.0.div(other))
-//     }
-
-//     pub fn neg(&self) -> Vector2 {
-//         Self(self.0.neg())
-//     }
-
-//     pub fn abs(v: &Vector2) -> f32 {
-//         Vector2Inner::abs(&v.0)
-//     }
-
-//     pub fn abs_sq(v: &Vector2) -> f32 {
-//         Vector2Inner::abs_sq(&v.0)
-//     }
-
-//     pub fn det(v1: &Vector2, v2: &Vector2) -> f32 {
-//         Vector2Inner::det(&v1.0, &v2.0)
-//     }
-
-//     pub fn normalize(vector: &Vector2) -> Vector2 {
-//         Self(Vector2Inner::normalize(&vector.0))
-//     }
-
-//     /**
-//      * \brief      Computes the squared distance from a line segment with the
-//      *             specified endpoints to a specified point.
-//      * \param      a               The first endpoint of the line segment.
-//      * \param      b               The second endpoint of the line segment.
-//      * \param      c               The point to which the squared distance is to
-//      *                             be calculated.
-//      * \return     The squared distance from the line segment to the point.
-//      */
-//     pub fn dist_sq_point_line_segment(a: &Vector2, b: &Vector2, c: &Vector2) -> f32 {}
-
-//     /**
-//      * \brief      Computes the signed distance from a line connecting the
-//      *             specified points to a specified point.
-//      * \param      a               The first point on the line.
-//      * \param      b               The second point on the line.
-//      * \param      c               The point to which the signed distance is to
-//      *                             be calculated.
-//      * \return     Positive when the point c lies to the left of the line ab.
-//      */
-//     pub fn left_of(a: &Vector2, b: &Vector2, c: &Vector2) -> f32 {
-//         return Self::det(&(*a - *c), &(*b - *a));
-//     }
-
-//     /**
-//      * \brief      Computes the square of a float.
-//      * \param      a               The float to be squared.
-//      * \return     The square of the float.
-//      */
-//     pub fn sqr(a: f32) -> f32 {
-//         return a * a;
-//     }
-// }
