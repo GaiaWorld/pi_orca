@@ -292,13 +292,12 @@ impl RVOSimulator {
 
     pub fn do_step(&mut self) -> bool {
         self.update_tree();
-
         let mut obstacle_num = Vec::with_capacity(self.agents_.len());
 
         let mut res = true;
         for (_id, agents) in &mut self.agents_ {
             if let Some(a) = &agents.goal_position {
-                if a.x != agents.position_.x && a.y != agents.position_.y {
+                if a.x != agents.position_.x || a.y != agents.position_.y {
                     res = false;
                 }
             }
@@ -307,7 +306,9 @@ impl RVOSimulator {
             obstacle_num.push(agents.compute_obstacle_orca());
         }
 
+        println!("do_step4");
         if !res {
+            println!("res: {}", res);
             let mut index = 0;
             for (_id, agents) in &mut self.agents_ {
                 agents.compute_new_velocity(obstacle_num[index]);

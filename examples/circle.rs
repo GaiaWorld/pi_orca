@@ -6,7 +6,6 @@ const TEMP: f32 = 20.;
 const NUM: usize = 4;
 
 fn main() {
-
     let mut sim = RVOSimulator::default();
     let mut goals = vec![];
     let mut agents = vec![];
@@ -51,14 +50,14 @@ pub fn setup_scenario(sim: &mut RVOSimulator, goals: &mut Vec<Vector2>, agents: 
     //     goals.push(-sim.get_agent_position(agents[i]).unwrap());
     // }
 
-    let pos = Vector2::new(0., 0.);
+    let pos = Vector2::new(100., 0.);
 
     agents.push(sim.add_agent(&pos, 2.0));
-    sim.set_agent_goal(agents[0], &[100., 0.]);
+    sim.set_agent_goal(agents[0], &[10., 0.]);
 
-    let pos = Vector2::new(0., 10.);
+    let pos = Vector2::new(90., 0.);
     agents.push(sim.add_agent(&pos, 2.0));
-    sim.set_agent_goal(agents[1], &[80., 0.]);
+    sim.set_agent_goal(agents[1], &[0., 0.]);
 }
 
 pub fn update_visualization(sim: &mut RVOSimulator, agents: &Vec<f64>) {
