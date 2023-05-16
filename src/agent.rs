@@ -116,6 +116,7 @@ impl Agent {
 
     /// 计算最佳新速度。
     pub fn compute_new_velocity(&mut self, num_obst_lines: usize) {
+        self.compute_pref_velocity();
         let inv_time_horizon = 1.0 / self.time_horizon;
 
         // 创建agent ORCA 线。
@@ -146,10 +147,21 @@ impl Agent {
                 &mut self.new_velocity,
             );
         }
-
+        println!(
+            "agent{}: new_velocity: {:?}, pref_velocity:{:?}",
+            self.id_, self.new_velocity, self.pref_velocity
+        );
         self.is_computed = false;
         self.velocity_ = self.new_velocity;
-        self.position_ = self.position_ + self.velocity_ * (unsafe { &*self.sim_ }).time_step;
+        let next_position = self.position_ + self.velocity_ * (unsafe { &*self.sim_ }).time_step;
+
+        if let Some(goal) = &self.goal_position {
+            if intersects(&self.position_, &next_position, goal) {
+                self.position_ = *goal;
+                return;
+            }
+        }
+        self.position_ = next_position;
     }
 
     /// 插入一个代理邻居到代理的列表。
@@ -766,9 +778,9 @@ impl Agent {
         self.orca_lines.len()
     }
 
-    pub fn compute_pref_velocity(&mut self) -> u8 {
+    pub fn compute_pref_velocity(&mut self) {
         // 未设置目标点
-        let mut id = 1;
+        let sim = unsafe { &mut *self.sim_ };
         let mut pref_velocity = Vector2::new(0.0, 0.0);
         if let Some(goal_position) = self.goal_position {
             let speed =
@@ -778,23 +790,26 @@ impl Agent {
                     self.max_speed
                 };
             let dist_pos = goal_position.sub(&self.position_);
-            let dist_sq = Vector2::abs_sq(&dist_pos);
-
-            let velocity = Vector2::normalize(&dist_pos)
-                .mul_number(speed)
-                .mul_number((unsafe { &*self.sim_ }).time_step);
-            if dist_sq > Vector2::abs_sq(&velocity) {
-                pref_velocity = velocity;
-                // 还未到达目标点
-                id = 0;
-            } else {
-                self.position_ = goal_position;
-                // 已经到达目标点
-                id = 2;
+            println!("dist_pos:{:?}", dist_pos);
+            if dist_pos.x != 0. || dist_pos.y != 0. {
+                pref_velocity = Vector2::normalize(&dist_pos).mul_number(speed);
+            }
+            println!("compute_pref_velocity0:{:?}", pref_velocity);
+            let have_orca = self.orca_lines.is_empty();
+            if !have_orca && self.pref_velocity.x != 0.0 && self.pref_velocity.y != 0. {
+                let angle = sim.get_rand() * 2.0 * std::f32::consts::PI;
+                let dist = sim.get_rand() * 0.000001;
+                println!("angle:{},dist:{}", angle, dist);
+                println!("compute_pref_velocity1:{:?}", pref_velocity);
+                let temp1 = Vector2::new(f32::cos(angle), f32::sin(angle));
+                let temp2 = temp1 * dist;
+                println!("temp:{:?}", temp2);
+                pref_velocity = pref_velocity + temp2;
+                println!("compute_pref_velocity2:{:?}", pref_velocity);
             }
         }
         self.pref_velocity = pref_velocity;
-        id
+        println!("compute_pref_velocity3:{:?}", self.pref_velocity);
     }
 }
 
@@ -842,4 +857,8 @@ pub fn judge(p1: Vector2, p2: Vector2, cricle_pos: Vector2, cricle_radius: f32) 
             return false;
         }
     }
+}
+
+pub fn intersects(ab_mins: &Vector2, ab_maxs: &Vector2, b: &Vector2) -> bool {
+    ab_mins.x <= b.x && ab_maxs.x > b.x && ab_mins.y <= b.y && ab_maxs.y > b.y
 }

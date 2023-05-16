@@ -9,7 +9,9 @@ use nalgebra::Point2;
 use parry2d::bounding_volume::Aabb as AABB;
 use pi_slotmap::{DefaultKey, SlotMap};
 use pi_spatial::{quad_helper::QuadTree, tilemap::TileMap};
-
+use pi_wy_rng::WyRng;
+use rand::Rng;
+use rand_core::SeedableRng;
 pub struct RVOSimulator {
     agents_: SlotMap<DefaultKey, Agent>,
     default_agent: Option<Agent>,
@@ -19,6 +21,7 @@ pub struct RVOSimulator {
     tile_map: TileMap<DefaultKey, i32>,
     obstacles_map: QuadTree<DefaultKey, Vec<Vector2>>,
     id_num: usize,
+    rng: WyRng,
 }
 
 impl RVOSimulator {
@@ -51,6 +54,7 @@ impl RVOSimulator {
                 0,
             ),
             id_num: 0,
+            rng: WyRng::seed_from_u64(1000),
         }
     }
 
@@ -63,6 +67,7 @@ impl RVOSimulator {
         radius: f32,
         max_speed: f32,
         velocity: &Vector2,
+        rng_seed: u32,
     ) -> Self {
         let max = nalgebra::Vector2::new(100f32, 100f32);
         let min = max / 100f32;
@@ -71,7 +76,7 @@ impl RVOSimulator {
             default_agent: None,
             global_time: 0.0,
             obstacles_: Default::default(),
-            time_step: time_step,
+            time_step,
             tile_map: TileMap::new(
                 AABB::new(
                     Point2::new(-1024f32, -1024f32),
@@ -92,6 +97,7 @@ impl RVOSimulator {
                 0,
             ),
             id_num: 0,
+            rng: WyRng::seed_from_u64(rng_seed as u64),
         };
 
         let mut agent = Agent::new(&mut sim_);
@@ -106,7 +112,7 @@ impl RVOSimulator {
         sim_
     }
 
-    pub fn add_agent(&mut self, position: &Vector2) -> f64 {
+    pub fn add_agent(&mut self, position: &Vector2, speed: f32) -> f64 {
         if self.default_agent.is_none() {
             return f64::MAX;
         }
@@ -124,6 +130,7 @@ impl RVOSimulator {
         agent.time_horizon_obst = default_agent.time_horizon_obst;
         agent.velocity_ = default_agent.velocity_;
         agent.id_ = self.id_num;
+        agent.custom_speed = Some(speed);
         self.id_num += 1;
         // println!(
         //     "addAgent !!! id: {:?}, ab: {:?}",
@@ -287,31 +294,22 @@ impl RVOSimulator {
         self.update_tree();
 
         let mut obstacle_num = Vec::with_capacity(self.agents_.len());
-        let mut res = true;
-
+        // let mut res = true;
+        
         for (_id, agents) in &mut self.agents_ {
-            let id = agents.compute_pref_velocity();
-            if id != 2 {
-                res = false;
-            }
+            agents.compute_neighbors();
+            obstacle_num.push(agents.compute_obstacle_orca());
         }
 
-        if !res {
-            for (_id, agents) in &mut self.agents_ {
-                agents.compute_neighbors();
-                obstacle_num.push(agents.compute_obstacle_orca());
-            }
-
-            let mut index = 0;
-            for (_id, agents) in &mut self.agents_ {
-                agents.compute_new_velocity(obstacle_num[index]);
-                index += 1;
-            }
-
-            self.global_time += self.time_step;
+        let mut index = 0;
+        for (_id, agents) in &mut self.agents_ {
+            agents.compute_new_velocity(obstacle_num[index]);
+            index += 1;
         }
 
-        res
+        self.global_time += self.time_step;
+
+        true
     }
 
     fn update_tree(&mut self) {
@@ -635,6 +633,10 @@ impl RVOSimulator {
         self.time_step = time_step;
     }
 
+    pub fn set_rng_seed(&mut self, seed: u32) {
+        self.rng = WyRng::seed_from_u64(seed as u64);
+    }
+
     /**
      * @brief     计算代理邻居。
      * @param[in] ab   当前代理的AABB
@@ -712,5 +714,11 @@ impl RVOSimulator {
             return agent.custom_speed;
         }
         None
+    }
+}
+
+impl RVOSimulator {
+    pub fn get_rand(&mut self) -> f32 {
+        self.rng.gen::<f32>()
     }
 }

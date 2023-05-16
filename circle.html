@@ -16,7 +16,7 @@
     const temp = 100;
     const num = 50;
     const remove_id = num / 2;
-    const maxSpeed = 4.0;
+    const maxSpeed = 1.0;
     let lastpotion = [];
 
     let is_remove = false;
@@ -51,7 +51,7 @@
     function setup_scenario(sim, goals, divs, agents) {
       sim.set_time_step(0.25);
 
-      sim.set_agent_defaults(15.0, 10, 10.0, 10.0, 2.5, maxSpeed, new Float32Array([0.0, 0.0]));
+      sim.set_agent_defaults(15.0, 10, 10.0, 10.0, 2.5, maxSpeed, new Float32Array([0.0, 0.0]), 1000);
       for (let i = 0; i < num; i++) {
         let x = Math.cos(i * 2.0 * PI / num) * temp;
         let y = Math.sin(i * 2.0 * PI / num) * temp;
@@ -71,7 +71,7 @@
         divs[i].id = "div" + i;
         document.body.appendChild(divs[i]);
 
-        agents[i] = sim.add_agent(new Float32Array([x, y]));
+        agents[i] = sim.add_agent(new Float32Array([x, y]), maxSpeed);
         // console.log("-sim.getAgentPosition(i): ", sim.get_agent_position(i).neg());
         sim.set_agent_goal(agents[i], new Float32Array([-x, -y]));
       }

@@ -19,6 +19,7 @@ impl RVOSimulator {
         radius: f32,
         max_speed: f32,
         velocity: &[f32],
+        rng_seed: u32,
     ) -> Self {
         let velocity = Vector2::new(velocity[0], velocity[1]);
         Self(RVOSimulatorInner::new(
@@ -30,6 +31,7 @@ impl RVOSimulator {
             radius,
             max_speed,
             &velocity,
+            rng_seed
         ))
     }
 
@@ -37,9 +39,9 @@ impl RVOSimulator {
         Self(RVOSimulatorInner::default())
     }
 
-    pub fn add_agent(&mut self, position: &[f32]) -> f64 {
+    pub fn add_agent(&mut self, position: &[f32], speed: f32) -> f64 {
         let pos = Vector2::new(position[0], position[1]);
-        self.0.add_agent(&pos)
+        self.0.add_agent(&pos, speed)
     }
 
     pub fn add_agent2(
