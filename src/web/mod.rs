@@ -295,5 +295,9 @@ impl RVOSimulator {
     pub fn get_agent_custom_speed(&mut self, agent_no: f64) -> Option<f32> {
         self.0.get_agent_custom_speed(agent_no)
     }
+
+    pub fn set_rng_seed(&mut self, seed: u32) {
+        self.0.set_rng_seed(seed)
+    }
 }
 

@@ -13,8 +13,8 @@
     import init from './pkg/pi_orca.js';
     import { RVOSimulator } from './pkg/pi_orca.js';
 
-    const temp = 100;
-    const num = 50;
+    const temp = 200;
+    const num = 100;
     const remove_id = num / 2;
     const maxSpeed = 1.0;
     let lastpotion = [];
@@ -50,7 +50,7 @@
 
     function setup_scenario(sim, goals, divs, agents) {
       sim.set_time_step(0.25);
-
+      sim.set_rng_seed(performance.now());
       sim.set_agent_defaults(15.0, 10, 10.0, 10.0, 2.5, maxSpeed, new Float32Array([0.0, 0.0]), 1000);
       for (let i = 0; i < num; i++) {
         let x = Math.cos(i * 2.0 * PI / num) * temp;
@@ -79,7 +79,7 @@
     }
 
     function update_visualization(sim, divs, agents) {
-      console.log("{}", sim.get_global_time());
+      // console.log("{}", sim.get_global_time());
       let result = true;
       for (let i = 0; i < num; i++) {
         if (i == remove_id && is_remove) {
@@ -105,7 +105,7 @@
 
         // console.log("Agent: " + i + "; x: " + position.x + "; y: " + position.y);
         let goal = sim.get_agent_goal(agents[i]);
-        console.log("goal: ", goal);
+        // console.log("goal: ", goal);
         if (goal) {
           let max_speed = sim.get_agent_max_speed(agents[i]);
           // console.log("max_speed: ", max_speed);

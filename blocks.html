@@ -37,7 +37,7 @@
 
     const temp = 200;
     const num = 100;
-    const maxSpeed = 2.0;
+    const maxSpeed = 1.0;
     const RAND_MAX = 0x7fff;
 
     let lastpotion = [];
@@ -47,9 +47,13 @@
 
       /* Specify the global time step of the simulation. */
       sim.set_time_step(0.25);
+      let time = performance.now();
+      console.log("time: ", time);
+      // 初始化随机数种子
+      sim.set_rng_seed(time * 1000);
 
       /* Specify the default parameters for agents that are subsequently added. */
-      sim.set_agent_defaults(5.0, 10000, 5.0, 5.0, 2.5, 4.0, new Float32Array([0.0, 0.0]));
+      sim.set_agent_defaults(10.0, 10000, 5.0, 5.0, 2.5, maxSpeed, new Float32Array([0.0, 0.0]));
 
       /*
        * Add agents, specifying their start position, and store their goals on the
@@ -62,7 +66,7 @@
         for (let j = 0; j < cout; ++j) {
           let x = 55.0 + i * 10.0;
           let y = 55.0 + j * 10.0;
-          agents.push(sim.add_agent(new Float32Array([x, y])));
+          agents.push(sim.add_agent(new Float32Array([x, y]), maxSpeed));
           sim.set_agent_goal(agents[agents.length - 1], new Float32Array([-x, -y]));
 
           divs[id] = document.createElement("div");
@@ -79,7 +83,7 @@
 
           x = -55.0 - i * 10.0;
           y = 55.0 + j * 10.0;
-          agents.push(sim.add_agent(new Float32Array([x, y])));
+          agents.push(sim.add_agent(new Float32Array([x, y]), maxSpeed));
           sim.set_agent_goal(agents[agents.length - 1], new Float32Array([-x, -y]));
 
           divs[id] = document.createElement("div");
@@ -96,7 +100,7 @@
 
           x = 55.0 + i * 10.0;
           y = -55.0 - j * 10.0;
-          agents.push(sim.add_agent(new Float32Array([x, y])));
+          agents.push(sim.add_agent(new Float32Array([x, y]), maxSpeed));
           sim.set_agent_goal(agents[agents.length - 1], new Float32Array([-x, -y]));
           divs[id] = document.createElement("div");
           divs[id].id = id;
@@ -112,7 +116,7 @@
 
           x = -55.0 - i * 10.0;
           y = -55.0 - j * 10.0;
-          agents.push(sim.add_agent(new Float32Array([x, y])));
+          agents.push(sim.add_agent(new Float32Array([x, y]), maxSpeed));
           sim.set_agent_goal(agents[agents.length - 1], new Float32Array([-x, -y]));
           divs[id] = document.createElement("div");
           divs[id].id = id;

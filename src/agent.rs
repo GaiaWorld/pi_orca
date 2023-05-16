@@ -115,7 +115,7 @@ impl Agent {
     }
 
     /// 计算最佳新速度。
-    pub fn compute_new_velocity(&mut self, num_obst_lines: usize) {
+    pub fn compute_new_velocity(&mut self, num_obst_lines: usize) -> bool {
         self.compute_pref_velocity();
         let inv_time_horizon = 1.0 / self.time_horizon;
 
@@ -147,21 +147,26 @@ impl Agent {
                 &mut self.new_velocity,
             );
         }
-        println!(
-            "agent{}: new_velocity: {:?}, pref_velocity:{:?}",
-            self.id_, self.new_velocity, self.pref_velocity
-        );
+
         self.is_computed = false;
         self.velocity_ = self.new_velocity;
         let next_position = self.position_ + self.velocity_ * (unsafe { &*self.sim_ }).time_step;
 
+        let min_x = self.position_.x.min(next_position.x);
+        let min_y = self.position_.y.min(next_position.y);
+
+        let max_x = self.position_.x.max(next_position.x);
+        let max_y = self.position_.y.max(next_position.y);
+
         if let Some(goal) = &self.goal_position {
-            if intersects(&self.position_, &next_position, goal) {
+            if intersects(&Vector2::new(min_x, min_y), &Vector2::new(max_x, max_y), goal) {
                 self.position_ = *goal;
-                return;
+                self.pref_velocity = Vector2::default();
+                return true;
             }
         }
         self.position_ = next_position;
+        return false;
     }
 
     /// 插入一个代理邻居到代理的列表。
@@ -790,26 +795,18 @@ impl Agent {
                     self.max_speed
                 };
             let dist_pos = goal_position.sub(&self.position_);
-            println!("dist_pos:{:?}", dist_pos);
             if dist_pos.x != 0. || dist_pos.y != 0. {
                 pref_velocity = Vector2::normalize(&dist_pos).mul_number(speed);
             }
-            println!("compute_pref_velocity0:{:?}", pref_velocity);
             let have_orca = self.orca_lines.is_empty();
-            if !have_orca && self.pref_velocity.x != 0.0 && self.pref_velocity.y != 0. {
+            if !have_orca {
                 let angle = sim.get_rand() * 2.0 * std::f32::consts::PI;
-                let dist = sim.get_rand() * 0.000001;
-                println!("angle:{},dist:{}", angle, dist);
-                println!("compute_pref_velocity1:{:?}", pref_velocity);
-                let temp1 = Vector2::new(f32::cos(angle), f32::sin(angle));
-                let temp2 = temp1 * dist;
-                println!("temp:{:?}", temp2);
-                pref_velocity = pref_velocity + temp2;
-                println!("compute_pref_velocity2:{:?}", pref_velocity);
+                let dist = sim.get_rand() * 0.0001;
+                let temp = Vector2::new(f32::cos(angle), f32::sin(angle)) * dist;
+                pref_velocity = pref_velocity + temp;
             }
         }
         self.pref_velocity = pref_velocity;
-        println!("compute_pref_velocity3:{:?}", self.pref_velocity);
     }
 }
 
