@@ -152,17 +152,23 @@ impl Agent {
         self.velocity_ = self.new_velocity;
         let next_position = self.position_ + self.velocity_ * (unsafe { &*self.sim_ }).time_step;
 
-        let min_x = self.position_.x.min(next_position.x);
-        let min_y = self.position_.y.min(next_position.y);
-
-        let max_x = self.position_.x.max(next_position.x);
-        let max_y = self.position_.y.max(next_position.y);
-
         if let Some(goal) = &self.goal_position {
-            if intersects(&Vector2::new(min_x, min_y), &Vector2::new(max_x, max_y), goal) {
-                self.position_ = *goal;
-                self.pref_velocity = Vector2::default();
-                return true;
+            // 实际速度和期望速度之间的差异很小
+            if Vector2::abs_sq(&(self.pref_velocity - self.velocity_)) < 0.01 {
+                let min_x = self.position_.x.min(next_position.x);
+                let min_y = self.position_.y.min(next_position.y);
+
+                let max_x = self.position_.x.max(next_position.x);
+                let max_y = self.position_.y.max(next_position.y);
+                if intersects(
+                    &Vector2::new(min_x, min_y),
+                    &Vector2::new(max_x, max_y),
+                    goal,
+                ) {
+                    self.position_ = *goal;
+                    // self.pref_velocity = Vector2::default();
+                    return true;
+                }
             }
         }
         self.position_ = next_position;
@@ -799,7 +805,7 @@ impl Agent {
                 pref_velocity = Vector2::normalize(&dist_pos).mul_number(speed);
             }
             let have_orca = self.orca_lines.is_empty();
-            if !have_orca {
+            if !have_orca  {
                 let angle = sim.get_rand() * 2.0 * std::f32::consts::PI;
                 let dist = sim.get_rand() * 0.0001;
                 let temp = Vector2::new(f32::cos(angle), f32::sin(angle)) * dist;
@@ -857,5 +863,5 @@ pub fn judge(p1: Vector2, p2: Vector2, cricle_pos: Vector2, cricle_radius: f32) 
 }
 
 pub fn intersects(ab_mins: &Vector2, ab_maxs: &Vector2, b: &Vector2) -> bool {
-    ab_mins.x <= b.x && ab_maxs.x > b.x && ab_mins.y <= b.y && ab_maxs.y > b.y
+    ab_mins.x < b.x && ab_maxs.x > b.x && ab_mins.y < b.y && ab_maxs.y > b.y
 }

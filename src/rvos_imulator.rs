@@ -306,9 +306,7 @@ impl RVOSimulator {
             obstacle_num.push(agents.compute_obstacle_orca());
         }
 
-        println!("do_step4");
         if !res {
-            println!("res: {}", res);
             let mut index = 0;
             for (_id, agents) in &mut self.agents_ {
                 agents.compute_new_velocity(obstacle_num[index]);
@@ -317,7 +315,7 @@ impl RVOSimulator {
             self.global_time += self.time_step;
         }
 
-        true
+        res
     }
 
     fn update_tree(&mut self) {
@@ -586,7 +584,14 @@ impl RVOSimulator {
      * @return 设置成功返回true，失败返回false。
      */
     pub fn set_agent_goal(&mut self, agent_no: f64, goal: &[f32]) -> bool {
-        let goal = Some(Vector2::new(goal[0], goal[1]));
+        let goal = if goal.len() == 2 {
+            Some(Vector2::new(goal[0], goal[1]))
+        } else if goal.len() == 0 {
+            None
+        } else {
+            return false;
+        };
+
         let agent_no = unsafe { std::mem::transmute(agent_no) };
         if let Some(agent) = self.agents_.get_mut(agent_no) {
             agent.goal_position = goal;

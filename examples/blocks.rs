@@ -47,22 +47,22 @@ pub fn setup_scenario(sim: &mut RVOSimulator, goals: &mut Vec<Vector2>, agents: 
     for i in 0..5 {
         for j in 0..5 {
             let pos = Vector2::new(55.0 + i as f32 * 10.0, 55.0 + j as f32 * 10.0);
-            let id = sim.add_agent(&pos);
+            let id = sim.add_agent(&pos, 2.);
             agents.push(id);
             goals.push(-pos);
 
             let pos = Vector2::new(-55.0 - i as f32 * 10.0, 55.0 + j as f32 * 10.0);
-            let id = sim.add_agent(&pos);
+            let id = sim.add_agent(&pos, 2.);
             agents.push(id);
             goals.push(-pos);
 
             let pos = Vector2::new(55.0 + i as f32 * 10.0, -55.0 - j as f32 * 10.0);
-            let id = sim.add_agent(&pos);
+            let id = sim.add_agent(&pos, 2.);
             agents.push(id);
             goals.push(-pos);
 
             let pos = Vector2::new(-55.0 - i as f32 * 10.0, -55.0 - j as f32 * 10.0);
-            let id = sim.add_agent(&pos);
+            let id = sim.add_agent(&pos, 2.);
             agents.push(id);
             goals.push(-pos);
         }
