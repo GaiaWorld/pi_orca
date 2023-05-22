@@ -151,12 +151,9 @@ impl Agent {
         self.is_computed = false;
         self.velocity_ = self.new_velocity;
         let next_position = self.position_ + self.velocity_ * (unsafe { &*self.sim_ }).time_step;
-
         if let Some(goal) = &self.goal_position {
-            // 实际速度和期望速度之间的差异很小
-            // if (self.pref_velocity.x - self.velocity_.x).abs() < 0.01
-            //     && (self.pref_velocity.y - self.velocity_.y).abs() < 0.01
-            // {
+            // 如过不是从目标点推开的，那么就需要判断是否到达目标点
+            if goal.x != self.position_.x || goal.y != self.position_.y {
                 let min_x = self.position_.x.min(next_position.x);
                 let min_y = self.position_.y.min(next_position.y);
 
@@ -168,10 +165,11 @@ impl Agent {
                     goal,
                 ) {
                     self.position_ = *goal;
-                    // self.pref_velocity = Vector2::default();
+                    self.pref_velocity = Vector2::default();
+                    self.velocity_ = Vector2::default();
                     return true;
                 }
-            // }
+            }
         }
         self.position_ = next_position;
         return false;
@@ -866,5 +864,5 @@ pub fn judge(p1: Vector2, p2: Vector2, cricle_pos: Vector2, cricle_radius: f32) 
 }
 
 pub fn intersects(ab_mins: &Vector2, ab_maxs: &Vector2, b: &Vector2) -> bool {
-    ab_mins.x < b.x && ab_maxs.x > b.x && ab_mins.y < b.y && ab_maxs.y > b.y
+    ab_mins.x <= b.x && ab_maxs.x >= b.x && ab_mins.y <= b.y && ab_maxs.y >= b.y
 }

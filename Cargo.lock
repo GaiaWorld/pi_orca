@@ -258,7 +258,7 @@ checksum = "eb24378a9838a3f29b4c10efbe9b807bbb90c533a776f295268bdc972ddebbf9"
 
 [[package]]
 name = "pi_orca"
-version = "0.4.0"
+version = "0.4.1"
 dependencies = [
  "getrandom",
  "nalgebra",

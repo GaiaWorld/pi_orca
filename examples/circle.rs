@@ -55,16 +55,19 @@ pub fn setup_scenario(sim: &mut RVOSimulator, goals: &mut Vec<Vector2>, agents: 
     agents.push(sim.add_agent(&pos, 2.0));
     sim.set_agent_goal(agents[0], Some(Vector2::new(10., 0.)));
 
-    let pos = Vector2::new(90., 0.);
-    agents.push(sim.add_agent(&pos, 2.0));
-    sim.set_agent_goal(agents[1], Some(Vector2::new(20., 0.)));
+    // let pos = Vector2::new(90., 0.);
+    // agents.push(sim.add_agent(&pos, 2.0));
+    // sim.set_agent_goal(agents[1], Some(Vector2::new(20., 0.)));
 }
 
 pub fn update_visualization(sim: &mut RVOSimulator, agents: &Vec<f64>) {
     println!("{}", sim.get_global_time());
 
     for id in agents {
-        println!(" {:?}", sim.get_agent_position(*id));
+        println!("当前位置： {:?}", sim.get_agent_position(*id));
+        println!("当前目标： {:?}", sim.get_agent_goal(*id));
+        println!("期望速度: {:?}", sim.get_agent_pref_velocity(*id));
+        println!("当前速度： {:?}", sim.get_agent_velocity(*id));
     }
     println!("");
 }

@@ -51,7 +51,7 @@
     function setup_scenario(sim, goals, divs, agents) {
       sim.set_time_step(0.25);
 
-      sim.set_agent_defaults(15, 10, 10.0, 10.0, 2.5, maxSpeed, new Float32Array([0.0, 0.0]));
+      sim.set_agent_defaults(15, 10, 10.0, 10.0, 2.5, maxSpeed, 0.0, 0.0);
       // for (let i = 0; i < num; i++) {
       let x = 50;
       let y = 50;
@@ -71,9 +71,9 @@
       divs[0].id = "div" + 0;
       document.body.appendChild(divs[0]);
 
-      agents[0] = sim.add_agent(new Float32Array([0, 50]));
+      agents[0] = sim.add_agent(0, 45, maxSpeed);
       // console.log("-sim.getAgentPosition(i): ", sim.get_agent_position(i).neg());
-      sim.set_agent_goal(agents[0], new Float32Array([0, 200]));
+      sim.set_agent_goal(agents[0], 0, 185);
 
       x = 60;
       y = 60;
@@ -93,25 +93,25 @@
       divs[1].id = "div" + 1;
       document.body.appendChild(divs[1]);
 
-      agents[2] = sim.add_agent(new Float32Array([0, 80]));
+      agents[1] = sim.add_agent(0, 60, maxSpeed);
       // console.log("-sim.getAgentPosition(i): ", sim.get_agent_position(i).neg());
-      sim.set_agent_goal(agents[1], new Float32Array([0,180]));
+      sim.set_agent_goal(agents[1], 0, 150);
 
-      divs[2] = document.createElement("div");
-      divs[2].style.left = Math.floor(x + temp) + "px";
-      divs[2].style.top = Math.floor(y + temp) + "px";
-      divs[2].style.width = "4px";
-      divs[2].style.height = "4px";
-      divs[2].style.borderRadius = "50%";
-      divs[2].style.backgroundColor = "rgb(1, 0, 0)";
-      // console.log(Math.floor(1 / num * 256));
-      divs[2].style.position = "absolute";
-      divs[2].id = "div" + 2;
-      document.body.appendChild(divs[2]);
+      // divs[2] = document.createElement("div");
+      // divs[2].style.left = Math.floor(x + temp) + "px";
+      // divs[2].style.top = Math.floor(y + temp) + "px";
+      // divs[2].style.width = "4px";
+      // divs[2].style.height = "4px";
+      // divs[2].style.borderRadius = "50%";
+      // divs[2].style.backgroundColor = "rgb(1, 0, 0)";
+      // // console.log(Math.floor(1 / num * 256));
+      // divs[2].style.position = "absolute";
+      // divs[2].id = "div" + 2;
+      // document.body.appendChild(divs[2]);
 
-      agents[1] = sim.add_agent(new Float32Array([0, 100]));
-      // console.log("-sim.getAgentPosition(i): ", sim.get_agent_position(i).neg());
-      sim.set_agent_goal(agents[1], new Float32Array([0,160]));
+      // agents[2] = sim.add_agent(0, 100, maxSpeed);
+      // // console.log("-sim.getAgentPosition(i): ", sim.get_agent_position(i).neg());
+      // sim.set_agent_goal(agents[2], 0, 160);
       // }
     }
 
@@ -126,12 +126,12 @@
 
 
         // lastpotion[i] = position;
-        // console.log("Agent: " + i + "; x: " + position.x() + "; y: " + position.y());
-        // let velocity = sim.get_agent_velocity(agents[i]);
-        // let pref_velocity = sim.get_agent_pref_velocity(agents[i]);
-        // console.log("role", agents[i], "当前速度：", velocity.x, velocity.y)
-        // console.log("role", agents[i], "期望速度：", pref_velocity.x, pref_velocity.y)
+        console.log("role", agents[i], "当前位置： " , position);
 
+        let velocity = sim.get_agent_velocity(agents[i]);
+        let pref_velocity = sim.get_agent_pref_velocity(agents[i]);
+        console.log("role", agents[i], "当前速度：", velocity)
+        console.log("role", agents[i], "期望速度：", pref_velocity)
         let x = Math.floor(position.x) + temp;
         let y = Math.floor(position.y) + temp;
         // console.log("Agent2: " + i + "; x: " + x + "; y: " + y);
@@ -142,7 +142,7 @@
 
         // console.log("Agent: " + i + "; x: " + position.x + "; y: " + position.y);
         let goal = sim.get_agent_goal(agents[i]);
-        console.log("goal: ", goal);
+        console.log("目标位置: ", goal);
         if (goal) {
           let max_speed = sim.get_agent_max_speed(agents[i]);
           // console.log("max_speed: ", max_speed);
@@ -206,7 +206,7 @@
       let id = setInterval(() => {
         let begin = performance.now();
         if (update_visualization(sim, divs, agents)) {
-          clearInterval(id);
+          // clearInterval(id);
         }
         let res = sim.do_step();
         console.log("======= time: ", performance.now() - begin, " res: " + res);
