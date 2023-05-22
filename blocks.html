@@ -53,7 +53,7 @@
       sim.set_rng_seed(time * 1000);
 
       /* Specify the default parameters for agents that are subsequently added. */
-      sim.set_agent_defaults(10.0, 10000, 5.0, 5.0, 2.5, maxSpeed, new Float32Array([0.0, 0.0]));
+      sim.set_agent_defaults(10.0, 10000, 5.0, 5.0, 2.5, maxSpeed, 0.0, 0.0);
 
       /*
        * Add agents, specifying their start position, and store their goals on the
@@ -66,8 +66,8 @@
         for (let j = 0; j < cout; ++j) {
           let x = 55.0 + i * 10.0;
           let y = 55.0 + j * 10.0;
-          agents.push(sim.add_agent(new Float32Array([x, y]), maxSpeed));
-          sim.set_agent_goal(agents[agents.length - 1], new Float32Array([-x, -y]));
+          agents.push(sim.add_agent(x, y, maxSpeed));
+          sim.set_agent_goal(agents[agents.length - 1], -x, -y);
 
           divs[id] = document.createElement("div");
           divs[id].id = id;
@@ -83,8 +83,8 @@
 
           x = -55.0 - i * 10.0;
           y = 55.0 + j * 10.0;
-          agents.push(sim.add_agent(new Float32Array([x, y]), maxSpeed));
-          sim.set_agent_goal(agents[agents.length - 1], new Float32Array([-x, -y]));
+          agents.push(sim.add_agent(x, y, maxSpeed));
+          sim.set_agent_goal(agents[agents.length - 1], -x, -y);
 
           divs[id] = document.createElement("div");
           divs[id].id = id;
@@ -100,8 +100,8 @@
 
           x = 55.0 + i * 10.0;
           y = -55.0 - j * 10.0;
-          agents.push(sim.add_agent(new Float32Array([x, y]), maxSpeed));
-          sim.set_agent_goal(agents[agents.length - 1], new Float32Array([-x, -y]));
+          agents.push(sim.add_agent(x, y, maxSpeed));
+          sim.set_agent_goal(agents[agents.length - 1], -x, -y);
           divs[id] = document.createElement("div");
           divs[id].id = id;
           divs[id].style.left = Math.floor(x + temp) + "px";
@@ -116,8 +116,8 @@
 
           x = -55.0 - i * 10.0;
           y = -55.0 - j * 10.0;
-          agents.push(sim.add_agent(new Float32Array([x, y]), maxSpeed));
-          sim.set_agent_goal(agents[agents.length - 1], new Float32Array([-x, -y]));
+          agents.push(sim.add_agent(x, y, maxSpeed));
+          sim.set_agent_goal(agents[agents.length - 1], -x, -y);
           divs[id] = document.createElement("div");
           divs[id].id = id;
           divs[id].style.left = Math.floor(x + temp) + "px";
@@ -236,7 +236,7 @@
           goal_vector = Vector2.normalize(goal_vector);
         }
         // console.log("========= goal_vector", goal_vector.x(), goal_vector.y());
-        sim.set_agent_pref_velocity(agents[i], new Float32Array([goal_vector.x, goal_vector.y]));
+        sim.set_agent_pref_velocity(agents[i], goal_vector.x, goal_vector.y);
 
         /*
         * Perturb a little to avoid deadlocks due to perfect symmetry.

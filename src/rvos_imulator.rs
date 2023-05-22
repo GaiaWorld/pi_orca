@@ -583,15 +583,7 @@ impl RVOSimulator {
      * @param[in] goal       目标点
      * @return 设置成功返回true，失败返回false。
      */
-    pub fn set_agent_goal(&mut self, agent_no: f64, goal: &[f32]) -> bool {
-        let goal = if goal.len() == 2 {
-            Some(Vector2::new(goal[0], goal[1]))
-        } else if goal.len() == 0 {
-            None
-        } else {
-            return false;
-        };
-
+    pub fn set_agent_goal(&mut self, agent_no: f64, goal: Option<Vector2>) -> bool {
         let agent_no = unsafe { std::mem::transmute(agent_no) };
         if let Some(agent) = self.agents_.get_mut(agent_no) {
             agent.goal_position = goal;

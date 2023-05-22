@@ -1,4 +1,4 @@
-use nalgebra::{ComplexField, Point2};
+use nalgebra::Point2;
 use parry2d::bounding_volume::Aabb as AABB;
 
 use crate::{

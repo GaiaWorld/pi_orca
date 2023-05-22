@@ -18,10 +18,11 @@ impl RVOSimulator {
         time_horizon_obst: f32,
         radius: f32,
         max_speed: f32,
-        velocity: &[f32],
+        velocity_x: f32,
+        velocity_y: f32,
         rng_seed: u32,
     ) -> Self {
-        let velocity = Vector2::new(velocity[0], velocity[1]);
+        let velocity = Vector2::new(velocity_x, velocity_y);
         Self(RVOSimulatorInner::new(
             time_step,
             neighbor_dist,
@@ -31,7 +32,7 @@ impl RVOSimulator {
             radius,
             max_speed,
             &velocity,
-            rng_seed
+            rng_seed,
         ))
     }
 
@@ -39,24 +40,26 @@ impl RVOSimulator {
         Self(RVOSimulatorInner::default())
     }
 
-    pub fn add_agent(&mut self, position: &[f32], speed: f32) -> f64 {
-        let pos = Vector2::new(position[0], position[1]);
+    pub fn add_agent(&mut self, position_x: f32, position_y: f32, speed: f32) -> f64 {
+        let pos = Vector2::new(position_x, position_y);
         self.0.add_agent(&pos, speed)
     }
 
     pub fn add_agent2(
         &mut self,
-        position: &[f32],
+        position_x: f32,
+        position_y: f32,
         neighbor_dist: f32,
         max_neighbors: usize,
         time_horizon: f32,
         time_horizon_obst: f32,
         radius: f32,
         max_speed: f32,
-        velocity: &[f32],
+        velocity_x: f32,
+        velocity_y: f32,
     ) -> f64 {
-        let position = Vector2::new(position[0], position[1]);
-        let velocity = Vector2::new(velocity[0], velocity[1]);
+        let position = Vector2::new(position_x, position_y);
+        let velocity = Vector2::new(velocity_x, velocity_y);
         self.0.add_agent2(
             &position,
             neighbor_dist,
@@ -91,7 +94,7 @@ impl RVOSimulator {
         self.0.remove_obstacle(id)
     }
 
-    pub fn do_step(&mut self)->bool {
+    pub fn do_step(&mut self) -> bool {
         self.0.do_step()
     }
 
@@ -121,9 +124,10 @@ impl RVOSimulator {
         time_horizon_obst: f32,
         radius: f32,
         max_speed: f32,
-        velocity: &[f32],
+        velocity_x: f32,
+        velocity_y: f32,
     ) {
-        let velocity = Vector2::new(velocity[0], velocity[1]);
+        let velocity = Vector2::new(velocity_x, velocity_y);
         self.0.set_agent_defaults(
             neighbor_dist,
             max_neighbors,
@@ -235,13 +239,18 @@ impl RVOSimulator {
         self.0.set_agent_neighbor_dist(agent_no, neighbor_dist)
     }
 
-    pub fn set_agent_position(&mut self, agent_no: f64, position: &[f32]) -> bool {
-        let position = Vector2::new(position[0], position[1]);
+    pub fn set_agent_position(&mut self, agent_no: f64, position_x: f32, position_y: f32) -> bool {
+        let position = Vector2::new(position_x, position_y);
         self.0.set_agent_position(agent_no, &position)
     }
 
-    pub fn set_agent_pref_velocity(&mut self, agent_no: f64, pref_velocity: &[f32]) -> bool {
-        let pref_velocity = Vector2::new(pref_velocity[0], pref_velocity[1]);
+    pub fn set_agent_pref_velocity(
+        &mut self,
+        agent_no: f64,
+        pref_velocity_x: f32,
+        pref_velocity_y: f32,
+    ) -> bool {
+        let pref_velocity = Vector2::new(pref_velocity_x, pref_velocity_y);
         self.0.set_agent_pref_velocity(agent_no, &pref_velocity)
     }
 
@@ -273,7 +282,18 @@ impl RVOSimulator {
      * @param[in] goal       目标点
      * @return 设置成功返回true，失败返回false。
      */
-    pub fn set_agent_goal(&mut self, agent_no: f64, goal: &[f32]) -> bool {
+    pub fn set_agent_goal(
+        &mut self,
+        agent_no: f64,
+        goal_x: Option<f32>,
+        goal_y: Option<f32>,
+    ) -> bool {
+        let goal = if goal_x.is_none() || goal_y.is_none() {
+            None
+        } else {
+            Some(Vector2::new(goal_x.unwrap(), goal_y.unwrap()))
+        };
+
         self.0.set_agent_goal(agent_no, goal)
     }
 
@@ -300,4 +320,3 @@ impl RVOSimulator {
         self.0.set_rng_seed(seed)
     }
 }
-

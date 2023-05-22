@@ -53,11 +53,11 @@ pub fn setup_scenario(sim: &mut RVOSimulator, goals: &mut Vec<Vector2>, agents: 
     let pos = Vector2::new(100., 0.);
 
     agents.push(sim.add_agent(&pos, 2.0));
-    sim.set_agent_goal(agents[0], &[10., 0.]);
+    sim.set_agent_goal(agents[0], Some(Vector2::new(10., 0.)));
 
     let pos = Vector2::new(90., 0.);
     agents.push(sim.add_agent(&pos, 2.0));
-    sim.set_agent_goal(agents[1], &[20., 0.]);
+    sim.set_agent_goal(agents[1], Some(Vector2::new(20., 0.)));
 }
 
 pub fn update_visualization(sim: &mut RVOSimulator, agents: &Vec<f64>) {
