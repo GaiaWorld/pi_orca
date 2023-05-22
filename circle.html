@@ -13,8 +13,8 @@
     import init from './pkg/pi_orca.js';
     import { RVOSimulator } from './pkg/pi_orca.js';
 
-    const temp = 200;
-    const num = 100;
+    const temp = 100;
+    const num = 50;
     const remove_id = num / 2;
     const maxSpeed = 1.0;
     let lastpotion = [];
@@ -90,10 +90,10 @@
 
         // lastpotion[i] = position;
         // console.log("Agent: " + i + "; x: " + position.x() + "; y: " + position.y());
-        // let velocity = sim.get_agent_velocity(agents[i]);
-        // let pref_velocity = sim.get_agent_pref_velocity(agents[i]);
-        // console.log("role", agents[i], "当前速度：", velocity.x, velocity.y)
-        // console.log("role", agents[i], "期望速度：", pref_velocity.x, pref_velocity.y)
+        let velocity = sim.get_agent_velocity(agents[i]);
+        let pref_velocity = sim.get_agent_pref_velocity(agents[i]);
+        console.log("role", agents[i], "当前速度：", velocity.x, velocity.y)
+        console.log("role", agents[i], "期望速度：", pref_velocity.x, pref_velocity.y)
 
         let x = Math.floor(position.x) + temp;
         let y = Math.floor(position.y) + temp;
@@ -105,7 +105,7 @@
 
         // console.log("Agent: " + i + "; x: " + position.x + "; y: " + position.y);
         let goal = sim.get_agent_goal(agents[i]);
-        // console.log("goal: ", goal);
+        console.log("goal: ", goal);
         if (goal) {
           let max_speed = sim.get_agent_max_speed(agents[i]);
           // console.log("max_speed: ", max_speed);
@@ -114,7 +114,7 @@
           let speed = max_speed > custom_speed ? custom_speed : max_speed;
           // console.log("speed: ", speed);
           let position = sim.get_agent_position(agents[i]);
-          // console.log("position: ", position);
+          console.log("position: ", position);
           let dist_pos = Vector2.new(goal.x, goal.y).sub(Vector2.new(position.x, position.y));
           // console.log("dist_pos: ", dist_pos);
           let dist_sq = Vector2.abs_sq(dist_pos);
@@ -169,7 +169,7 @@
       let id = setInterval(() => {
         let begin = performance.now();
         if (update_visualization(sim, divs, agents)){
-          clearInterval(id);
+          // clearInterval(id);
         }
         let res = sim.do_step();
         console.log("======= time: ", performance.now() - begin, " res: " + res);

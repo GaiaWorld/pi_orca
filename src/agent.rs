@@ -1,4 +1,4 @@
-use nalgebra::Point2;
+use nalgebra::{ComplexField, Point2};
 use parry2d::bounding_volume::Aabb as AABB;
 
 use crate::{
@@ -154,7 +154,9 @@ impl Agent {
 
         if let Some(goal) = &self.goal_position {
             // 实际速度和期望速度之间的差异很小
-            if Vector2::abs_sq(&(self.pref_velocity - self.velocity_)) < 0.01 {
+            // if (self.pref_velocity.x - self.velocity_.x).abs() < 0.01
+            //     && (self.pref_velocity.y - self.velocity_.y).abs() < 0.01
+            // {
                 let min_x = self.position_.x.min(next_position.x);
                 let min_y = self.position_.y.min(next_position.y);
 
@@ -169,7 +171,7 @@ impl Agent {
                     // self.pref_velocity = Vector2::default();
                     return true;
                 }
-            }
+            // }
         }
         self.position_ = next_position;
         return false;
@@ -803,13 +805,14 @@ impl Agent {
             let dist_pos = goal_position.sub(&self.position_);
             if dist_pos.x != 0. || dist_pos.y != 0. {
                 pref_velocity = Vector2::normalize(&dist_pos).mul_number(speed);
-            }
-            let have_orca = self.orca_lines.is_empty();
-            if !have_orca  {
-                let angle = sim.get_rand() * 2.0 * std::f32::consts::PI;
-                let dist = sim.get_rand() * 0.0001;
-                let temp = Vector2::new(f32::cos(angle), f32::sin(angle)) * dist;
-                pref_velocity = pref_velocity + temp;
+
+                let have_orca = self.orca_lines.is_empty();
+                if !have_orca {
+                    let angle = sim.get_rand() * 2.0 * std::f32::consts::PI;
+                    let dist = sim.get_rand() * 0.0001;
+                    let temp = Vector2::new(f32::cos(angle), f32::sin(angle)) * dist;
+                    pref_velocity = pref_velocity + temp;
+                }
             }
         }
         self.pref_velocity = pref_velocity;
