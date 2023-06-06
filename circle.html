@@ -8,13 +8,13 @@
 <body>
   <script type="module">
 
-    const PI = 3.141592653589793238;
+    const PI = 3.14159265358979323846;
 
     import init from './pkg/pi_orca.js';
     import { RVOSimulator } from './pkg/pi_orca.js';
 
-    const temp = 100;
-    const num = 15;
+    const temp = 20;
+    const num = 4;
     const remove_id = num / 2;
     const maxSpeed = 1.0;
     let lastpotion = [];
@@ -51,10 +51,12 @@
     function setup_scenario(sim, goals, divs, agents) {
       sim.set_time_step(0.25);
       sim.set_rng_seed(performance.now());
-      sim.set_agent_defaults(15.0, 10, 10.0, 10.0, 2.5, maxSpeed, 0.0, 0.0);
+      sim.set_agent_defaults(15.0, 10, 5.0, 5.0, 2.5, maxSpeed, 0.0, 0.0);
       for (let i = 0; i < num; i++) {
-        let x = Math.cos(i * 2.0 * PI / num) * temp;
-        let y = Math.sin(i * 2.0 * PI / num) * temp;
+        let a = Math.cos(i * 2.0 * PI / num);
+        let x = a * temp;
+        let b = Math.sin(i * 2.0 * PI / num);
+        let y = b * temp;
 
         console.log("x: ", x);
         console.log("y: ", y);
@@ -71,7 +73,7 @@
         divs[i].id = "div" + i;
         document.body.appendChild(divs[i]);
 
-        agents[i] = sim.add_agent(x, y, maxSpeed);
+        agents[i] = sim.add_agent(0, 10, maxSpeed);
         // console.log("-sim.getAgentPosition(i): ", sim.get_agent_position(i).neg());
         sim.set_agent_goal(agents[i], -x, -y);
       }
@@ -79,7 +81,7 @@
     }
 
     function update_visualization(sim, divs, agents) {
-      // console.log("{}", sim.get_global_time());
+      console.log("{}", sim.get_global_time());
       let result = true;
       for (let i = 0; i < num; i++) {
         if (i == remove_id && is_remove) {
@@ -92,8 +94,9 @@
         // console.log("Agent: " + i + "; x: " + position.x() + "; y: " + position.y());
         let velocity = sim.get_agent_velocity(agents[i]);
         let pref_velocity = sim.get_agent_pref_velocity(agents[i]);
-        console.log("role", agents[i], "当前速度：", velocity.x, velocity.y)
-        console.log("role", agents[i], "期望速度：", pref_velocity.x, pref_velocity.y)
+        console.log("role", agents[i], "当前位置：", position)
+        console.log("role", agents[i], "当前速度：", velocity)
+        console.log("role", agents[i], "期望速度：", pref_velocity)
 
         let x = Math.floor(position.x) + temp;
         let y = Math.floor(position.y) + temp;
@@ -105,7 +108,7 @@
 
         // console.log("Agent: " + i + "; x: " + position.x + "; y: " + position.y);
         let goal = sim.get_agent_goal(agents[i]);
-        console.log("goal: ", goal);
+        // console.log("goal: ", goal);
         if (goal) {
           let max_speed = sim.get_agent_max_speed(agents[i]);
           // console.log("max_speed: ", max_speed);
@@ -114,7 +117,7 @@
           let speed = max_speed > custom_speed ? custom_speed : max_speed;
           // console.log("speed: ", speed);
           let position = sim.get_agent_position(agents[i]);
-          console.log("position: ", position);
+          
           let dist_pos = Vector2.new(goal.x, goal.y).sub(Vector2.new(position.x, position.y));
           // console.log("dist_pos: ", dist_pos);
           let dist_sq = Vector2.abs_sq(dist_pos);
@@ -168,7 +171,7 @@
       let r = 0;
       let id = setInterval(() => {
         let begin = performance.now();
-        if (update_visualization(sim, divs, agents)){
+        if (update_visualization(sim, divs, agents)) {
           // clearInterval(id);
         }
         let res = sim.do_step();

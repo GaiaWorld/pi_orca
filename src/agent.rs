@@ -75,6 +75,7 @@ impl Agent {
 
         let ids = sim.compute_obstacle_aabb(aabb);
 
+        // 计算障碍物邻居。
         for (begin_id, vertices) in ids {
             let len = vertices.len();
             let mut id = begin_id;
@@ -88,6 +89,7 @@ impl Agent {
 
         self.agent_neighbors.clear();
 
+        // 计算代理邻居。
         if self.max_neighbors > 0 {
             let mut _range_sq = Vector2::sqr(self.neighbor_dist);
             let aabb = AABB {
@@ -95,7 +97,6 @@ impl Agent {
                 maxs: Point2::new(self.position_.x + _range_sq, self.position_.y + _range_sq),
             };
             let ids = sim.compute_neighbors_aabb(aabb);
-            // println!("agent{}: have {} neighbors", self.id_.0, ids.len());
 
             for id in ids {
                 let agent = unsafe { &mut *sim.get_agent(id).unwrap() };
@@ -103,7 +104,7 @@ impl Agent {
                 if self.is_static && agent.is_static {
                     continue;
                 }
-
+                // 如果邻居已经计算过了，忽略这个代理邻居。
                 if agent.is_computed {
                     continue;
                 }
@@ -114,8 +115,8 @@ impl Agent {
         self.is_computed = true;
     }
 
-    /// 计算最佳新速度。
-    pub fn compute_new_velocity(&mut self, num_obst_lines: usize) -> bool {
+    /// 计算新速度。
+    pub fn compute_new_velocity(&mut self, num_obst_lines: usize) {
         self.compute_pref_velocity();
         let inv_time_horizon = 1.0 / self.time_horizon;
 
@@ -123,10 +124,11 @@ impl Agent {
         let len = self.agent_neighbors.len();
         for i in 0..len {
             let other = unsafe { &mut *self.agent_neighbors.get_mut(i).unwrap().1 };
-
+            // 计算自己的orca线。
             self.compute_agent_orca(other, inv_time_horizon);
 
             let inv_time_horizon2 = 1.0 / other.time_horizon;
+            // 计算邻居的orca线。
             other.compute_agent_orca(self, inv_time_horizon2);
         }
 
@@ -147,32 +149,6 @@ impl Agent {
                 &mut self.new_velocity,
             );
         }
-
-        self.is_computed = false;
-        self.velocity_ = self.new_velocity;
-        let next_position = self.position_ + self.velocity_ * (unsafe { &*self.sim_ }).time_step;
-        if let Some(goal) = &self.goal_position {
-            // 如过不是从目标点推开的，那么就需要判断是否到达目标点
-            if goal.x != self.position_.x || goal.y != self.position_.y {
-                let min_x = self.position_.x.min(next_position.x);
-                let min_y = self.position_.y.min(next_position.y);
-
-                let max_x = self.position_.x.max(next_position.x);
-                let max_y = self.position_.y.max(next_position.y);
-                if intersects(
-                    &Vector2::new(min_x, min_y),
-                    &Vector2::new(max_x, max_y),
-                    goal,
-                ) {
-                    self.position_ = *goal;
-                    self.pref_velocity = Vector2::default();
-                    self.velocity_ = Vector2::default();
-                    return true;
-                }
-            }
-        }
-        self.position_ = next_position;
-        return false;
     }
 
     /// 插入一个代理邻居到代理的列表。
@@ -185,17 +161,17 @@ impl Agent {
                 self.agent_neighbors.push((dist_sq, agent));
                 // }
 
-                // let mut i = self.agent_neighbors.len() - 1;
+                let mut i = self.agent_neighbors.len() - 1;
 
-                // while i != 0 && dist_sq < self.agent_neighbors[i - 1].0 {
-                //     self.agent_neighbors[i] = self.agent_neighbors[i - 1].clone();
-                //     i -= 1;
-                // }
+                while i != 0 && dist_sq < self.agent_neighbors[i - 1].0 {
+                    self.agent_neighbors[i] = self.agent_neighbors[i - 1].clone();
+                    i -= 1;
+                }
 
-                // self.agent_neighbors[i] = (dist_sq, agent);
+                self.agent_neighbors[i] = (dist_sq, agent);
 
                 // if self.agent_neighbors.len() == self.max_neighbors {
-                //     *range_sq = self.agent_neighbors.last().unwrap().0;
+                // *range_sq = self.agent_neighbors.last().unwrap().0;
                 // }
             }
         }
@@ -230,9 +206,30 @@ impl Agent {
 
     pub fn update(&mut self) {
         self.velocity_ = self.new_velocity;
-        self.position_ = self.position_ + self.velocity_ * (unsafe { &*self.sim_ }).time_step;
+        let next_position = self.position_ + self.velocity_ * (unsafe { &*self.sim_ }).time_step;
+        if let Some(goal) = &self.goal_position {
+            // 如过不是从目标点推开的，那么就需要判断是否到达目标点
+            if goal.x != self.position_.x || goal.y != self.position_.y {
+                let min_x = self.position_.x.min(next_position.x);
+                let min_y = self.position_.y.min(next_position.y);
+
+                let max_x = self.position_.x.max(next_position.x);
+                let max_y = self.position_.y.max(next_position.y);
+                if intersects(
+                    &Vector2::new(min_x, min_y),
+                    &Vector2::new(max_x, max_y),
+                    goal,
+                ) {
+                    self.position_ = *goal;
+                    self.pref_velocity = Vector2::default();
+                    self.velocity_ = Vector2::default();
+                    self.is_computed = false;
+                    return;
+                }
+            }
+        }
+        self.position_ = next_position;
         self.is_computed = false;
-        self.orca_lines.clear();
     }
 
     pub fn linear_program1(
@@ -248,7 +245,7 @@ impl Agent {
             - Vector2::abs_sq(&lines[line_no].point);
 
         if discriminant < 0.0 {
-            /* Max speed circle fully invalidates line lineNo. */
+            /* 最大速度 圆圈 完全无效线 */
             return false;
         }
 
@@ -264,7 +261,7 @@ impl Agent {
             );
 
             if denominator.abs() <= RVO_EPSILON {
-                /* Lines lineNo and i are (almost) parallel. */
+                /* 线 lineNo 和 i 是（几乎）平行的。 */
                 if numerator < 0.0 {
                     return false;
                 } else {
@@ -275,10 +272,10 @@ impl Agent {
             let t = numerator / denominator;
 
             if denominator >= 0.0 {
-                /* Line i bounds line lineNo on the right. */
+                /* 第 i 行边界线 在lineNo 右边。 */
                 t_right = t_right.min(t);
             } else {
-                /* Line i bounds line lineNo on the left. */
+                /* 第 i 行边界线 在lineNo 左边。 */
                 t_left = t.max(t_left);
             }
 
@@ -288,16 +285,16 @@ impl Agent {
         }
 
         if direction_opt {
-            /* Optimize direction. */
+            /* 优化方向。 */
             if lines[line_no].direction * opt_velocity > 0.0 {
-                /* Take right extreme. */
+                /* 采取左端。 */
                 *result = lines[line_no].point + lines[line_no].direction * t_right;
             } else {
-                /* Take left extreme. */
+                /* 采取右端。*/
                 *result = lines[line_no].point + lines[line_no].direction * t_left;
             }
         } else {
-            /* Optimize closest point. */
+            /* 优化最近点。 */
             let t = lines[line_no].direction * (*opt_velocity - lines[line_no].point);
             if t < t_left {
                 *result = lines[line_no].point + lines[line_no].direction * t_left;
@@ -320,22 +317,22 @@ impl Agent {
     ) -> usize {
         if direction_opt {
             /*
-             * Optimize direction. Note that the optimization velocity is of unit
-             * length in this case.
+             * 请注意，在这种情况下，优化速度是单位长度的。
              */
             *result = *opt_velocity * radius;
         } else if Vector2::abs_sq(opt_velocity) > Vector2::sqr(radius) {
-            /* Optimize closest point and outside circle. */
+            /*优化最近点和外圆。 */
             *result = Vector2::normalize(opt_velocity) * radius;
         } else {
-            /* Optimize closest point and inside circle. */
+            /* 优化最近点和内圆。*/
             *result = *opt_velocity;
         }
 
+        // let temp = *result;
         for i in 0..lines.len() {
-            let r = Vector2::det(&lines[i].direction, &(lines[i].point - *result));
-            if (r) > 0.0 {
-                /* Result does not satisfy constraint i. Compute new optimal result. */
+            // let r = Vector2::det(&lines[i].direction, &(lines[i].point - *result));
+            if Vector2::det(&lines[i].direction, &(lines[i].point - *result)) > 0.0 {
+                /*结果不满足约束 i。 计算新的最优结果。 */
                 let temp_result = *result;
                 if !Self::linear_program1(lines, i, radius, opt_velocity, direction_opt, result) {
                     *result = temp_result;
@@ -358,7 +355,7 @@ impl Agent {
 
         for i in begin_line..lines.len() {
             if Vector2::det(&lines[i].direction, &(lines[i].point - *result)) > distance {
-                /* Result does not satisfy constraint of line i. */
+                /* 结果不满足第 i 行的约束。*/
                 let mut proj_lines = vec![];
 
                 lines[0..num_obst_lines].iter().for_each(|l| {
@@ -371,12 +368,12 @@ impl Agent {
                     let determinant = Vector2::det(&lines[i].direction, &lines[j].direction);
 
                     if determinant.abs() <= RVO_EPSILON {
-                        /* Line i and line j are parallel. */
+                        /* 线 i 和线 j 平行。 */
                         if lines[i].direction * lines[j].direction > 0.0 {
-                            /* Line i and line j point in the same direction. */
+                            /* i 和 j 线指向同一方向。*/
                             continue;
                         } else {
-                            /* Line i and line j point in opposite direction. */
+                            /* 线 i 和线 j 指向相反的方向。*/
                             line.point = (lines[i].point + lines[j].point) * 0.5;
                         }
                     } else {
@@ -402,11 +399,8 @@ impl Agent {
                     result,
                 ) < proj_lines.len()
                 {
-                    /* This should in principle not happen.  The result is by definition
-                     * already in the feasible region of this linear program. If it fails,
-                     * it is due to small floating point error, and the current result is
-                     * kept.
-                     */
+                    // 这在原则上不应该发生。 
+                    // 根据定义，结果已经在该线性程序的可行域中。 如果失败，则为小浮点误差，保留当前结果。
                     *result = temp_result;
                 }
 
@@ -455,9 +449,12 @@ impl Agent {
     }
 
     pub fn compute_agent_orca(&mut self, other: &Agent, inv_time_horizon: f32) {
+        // 相对位置
         let relative_position = other.position_ - self.position_;
+        // 相对速度
         let relative_velocity = self.velocity_ - other.velocity_;
         let dist_sq = Vector2::abs_sq(&relative_position);
+        // 半径和
         let combined_radius = self.radius_ + other.radius_;
         let combined_radius_sq = Vector2::sqr(combined_radius);
 
@@ -466,31 +463,55 @@ impl Agent {
 
         if dist_sq > combined_radius_sq {
             /* 没有碰撞。 */
+            // 这里主要要参考那张一个大圆一个小园，在一个锥体内的那张图
+            // 当前的相对速度相对于发生碰摔的临界速度的余量
+            // 可以理解为在速度域中，撞击速度指向当前速康的向量
+            // 在八何表示中，就是小圆中心指向当前速度点的向量
             let w = relative_velocity - relative_position * inv_time_horizon;
             /* 从截止中心到相对速度的矢量。*/
+            // 此向量的平方
             let w_length_sq = Vector2::abs_sq(&w);
 
+            // 此向量到碰撞方向的投影
+            //在几何表示中，relativeposition即为大圆中心，此处可以理解为此向量到园锥中心向量的投影
             let dot_product1 = w * relative_position;
 
+            // 当前速度相对于碰撞速度的余量
+            // 到碰撞方向的投影小于0，说明目前速度在碰撞方向的速度还没到碰撞需要的速度
+            // 所以其在速度空间中的仅晋应该位干障碍区域的前方
+            // 后面一个条件，可以同时开根，即当dotProduct1>combinedRadius *wLength时
+            // 此时消掉两边的wlength，得到的就是大园中心向量到的投影 >conbinedRadius，注意比较符号两侧都是取绝对值得
+            // 这个条件放到几何表示中比较明显，其实就是在比较w向量和两条腿的重线的角度
+            // 因为我们此处只考虑障碍区域前侧，所以w与relativePosition一定是钝角
+            // 当此角度确定为钝角时，它的角度越大，投影的绝对值就越大，直到180度时cos为-1
+            // 所以这个条件相当于是拿到了我们参考图中前侧小园的弧线部分，即障碍区城的前侧边缘
             if dot_product1 < 0.0 && Vector2::sqr(dot_product1) > combined_radius_sq * w_length_sq {
-                /* 截止圆上的项目。 */
+                /* 最近的点在圆上 */
                 let w_length = w_length_sq.sqrt();
                 let unit_w = w / w_length;
-
+                // 方向为w顺时针转90°，相当于是当前速度相对于小圆的切线
                 line.direction = Vector2::new(unit_w.y, -unit_w.x);
+                // 此处combined_radius * inv_time_horizon为小圆半径
+                // 减去wLength就是把w放在小圆圆心时，w终点到小圆表面的距高
                 _u = unit_w * (combined_radius * inv_time_horizon - w_length);
             } else {
-                /* Project on legs. */
+                /* 最近的点在腿上 */
+                // 勾股定埋，计算出从原点开始的两京腿的长底
                 let leg = (dist_sq - combined_radius_sq).sqrt();
 
+                // 此处是第一列为relative_position第二列为的行列式
+                // 行列式司以理解为有高 面积（或体积）因此可以近过行列式正负来判断行列式第一列向量到第二列向量的旋转方向（180度以内)
+                // 大于0时是逆时针旋转，小于0是顺时针
                 if Vector2::det(&relative_position, &w) > 0.0 {
-                    /* Project on left leg. */
+                    /* 最近的点在左腿上 */
+                    // 这里可以把dist_sq除进来，就可以理解为是一个向量旋转的操作
                     line.direction = Vector2::new(
                         relative_position.x * leg - relative_position.y * combined_radius,
                         relative_position.x * combined_radius + relative_position.y * leg,
                     ) / dist_sq;
                 } else {
-                    /* Project on right leg. */
+                    /* 最近的点在右腿上 */
+                    // 这里可以把dist_sq除进来，就可以理解为是一个向量旋转的操作
                     line.direction = -Vector2::new(
                         relative_position.x * leg + relative_position.y * combined_radius,
                         -relative_position.x * combined_radius + relative_position.y * leg,
@@ -498,13 +519,14 @@ impl Agent {
                 }
 
                 let dot_product2 = relative_velocity * line.direction;
+                // 此址u应该是当前速度到腿的年线
                 _u = line.direction * dot_product2 - relative_velocity;
             }
         } else {
-            /* Collision. Project on cut-off circle of time timeStep. */
+            /* 碰撞*/
             let inv_time_step = 1.0 / (unsafe { &*self.sim_ }).time_step;
 
-            /* Vector from cutoff center to relative velocity. */
+            /* 从截止中心到相对速度的矢量。 */
             let w = relative_velocity - relative_position * inv_time_step;
 
             let w_length = Vector2::abs(&w);
@@ -520,13 +542,12 @@ impl Agent {
 
     pub fn compute_obstacle_orca(&mut self) -> usize {
         self.orca_lines.clear();
-        self.is_computed = false;
 
         let sim = unsafe { &*self.sim_ };
 
         let inv_time_horizon_obst = 1.0 / self.time_horizon_obst;
 
-        // 计算障碍 ORCA 线
+        // 计算障碍物的 ORCA 线
         for i in 0..self.obstacle_neighbors.len() {
             let mut obstacle1 = unsafe { &*self.obstacle_neighbors.get_mut(i).unwrap().1 };
             let mut obstacle2 = unsafe { &*sim.get_obstacle(obstacle1.next_obstacle).unwrap() };
@@ -612,11 +633,9 @@ impl Agent {
                     /* 忽略障碍物。 */
                     continue;
                 }
-                // println!("00000000000");
                 obstacle2 = obstacle1;
 
                 let leg1 = (dist_sq1 - radius_sq).sqrt();
-                // println!("_left_leg_direction1");
                 _left_leg_direction = Vector2::new(
                     relative_position1.x * leg1 - relative_position1.y * self.radius_,
                     relative_position1.x * self.radius_ + relative_position1.y * leg1,
@@ -790,7 +809,7 @@ impl Agent {
     }
 
     pub fn compute_pref_velocity(&mut self) {
-        // 未设置目标点
+        // 当未设置目标位置时，不需要计算pref_velocity。
         let sim = unsafe { &mut *self.sim_ };
         let mut pref_velocity = Vector2::new(0.0, 0.0);
         if let Some(goal_position) = self.goal_position {
@@ -801,10 +820,13 @@ impl Agent {
                     self.max_speed
                 };
             let dist_pos = goal_position.sub(&self.position_);
+            // 如果正处于目标点上时，那么pref_velocity为0
             if dist_pos.x != 0. || dist_pos.y != 0. {
+                // 根据最大速度或者自定义速度计算pref_velocity
                 pref_velocity = Vector2::normalize(&dist_pos).mul_number(speed);
 
                 let have_orca = self.orca_lines.is_empty();
+                // 如果没有orca，那么pref_velocity不需要进行随机扰动
                 if !have_orca {
                     let angle = sim.get_rand() * 2.0 * std::f32::consts::PI;
                     let dist = sim.get_rand() * 0.0001;

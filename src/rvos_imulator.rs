@@ -269,6 +269,7 @@ impl RVOSimulator {
         return unsafe { std::mem::transmute(id) };
     }
 
+    /// 删除障碍物
     pub fn remove_obstacle(&mut self, id: f64) -> bool {
         let mut key = unsafe { std::mem::transmute(id) };
 
@@ -290,6 +291,7 @@ impl RVOSimulator {
         false
     }
 
+    /// 模拟帧
     pub fn do_step(&mut self) -> bool {
         self.update_tree();
         let mut obstacle_num = Vec::with_capacity(self.agents_.len());
@@ -312,6 +314,11 @@ impl RVOSimulator {
                 agents.compute_new_velocity(obstacle_num[index]);
                 index += 1;
             }
+
+            for (_id, agents) in &mut self.agents_ {
+                agents.update();
+            }
+
             self.global_time += self.time_step;
         }
 

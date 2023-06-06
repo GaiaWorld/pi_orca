@@ -319,4 +319,9 @@ impl RVOSimulator {
     pub fn set_rng_seed(&mut self, seed: u32) {
         self.0.set_rng_seed(seed)
     }
+
+    pub fn get_agent_orcaline(&mut self, agent_no: f64, line_no: usize) -> JsValue {
+        let v = self.0.get_agent_orcaline(agent_no, line_no);
+        to_value(&v).unwrap()
+    }
 }
