@@ -16,7 +16,7 @@
     const temp = 100;
     const num = 50;
     const remove_id = num / 2;
-    const maxSpeed = 2;
+    const maxSpeed = 5;
     let lastpotion = [];
 
     let is_remove = false;
@@ -47,7 +47,7 @@
         return Vector2.new(other.x / length, other.y / length);
       }
     }
-0
+    // 0
     function setup_scenario(sim, goals, divs, agents) {
       sim.set_time_step(0.25);
 
@@ -56,8 +56,6 @@
       let x = 50;
       let y = 50;
 
-      console.log("x: ", x);
-      console.log("y: ", y);
 
       divs[0] = document.createElement("div");
       divs[0].style.left = Math.floor(x + temp) + "px";
@@ -71,15 +69,10 @@
       divs[0].id = "div" + 0;
       document.body.appendChild(divs[0]);
 
-      agents[0] = sim.add_agent(0, 100, maxSpeed);
+      agents[0] = sim.add_agent(100, 0, maxSpeed);
       // console.log("-sim.getAgentPosition(i): ", sim.get_agent_position(i).neg());
-      sim.set_agent_goal(agents[0], 0, -100);
-
-      x = 60;
-      y = 60;
-
-      console.log("x: ", x);
-      console.log("y: ", y);
+      sim.set_agent_goal(agents[0], 0, 0);
+      // sim.set_agent_velocity(agents[0], -5, 0);
 
       divs[1] = document.createElement("div");
       divs[1].style.left = Math.floor(x + temp) + "px";
@@ -93,61 +86,58 @@
       divs[1].id = "div" + 1;
       document.body.appendChild(divs[1]);
 
-      agents[1] = sim.add_agent(0, -100, maxSpeed);
+      agents[1] = sim.add_agent(120, 0, maxSpeed);
       // console.log("-sim.getAgentPosition(i): ", sim.get_agent_position(i).neg());
-      sim.set_agent_goal(agents[1], 0, 100);
+      sim.set_agent_goal(agents[1], -20, 0);
 
-      divs[2] = document.createElement("div");
-      divs[2].style.left = Math.floor(x + temp) + "px";
-      divs[2].style.top = Math.floor(y + temp) + "px";
-      divs[2].style.width = "4px";
-      divs[2].style.height = "4px";
-      divs[2].style.borderRadius = "50%";
-      divs[2].style.backgroundColor = "rgb(1, 0, 0)";
-      // console.log(Math.floor(1 / num * 256));
-      divs[2].style.position = "absolute";
-      divs[2].id = "div" + 2;
-      document.body.appendChild(divs[2]);
+      // divs[2] = document.createElement("div");
+      // divs[2].style.left = Math.floor(x + temp) + "px";
+      // divs[2].style.top = Math.floor(y + temp) + "px";
+      // divs[2].style.width = "4px";
+      // divs[2].style.height = "4px";
+      // divs[2].style.borderRadius = "50%";
+      // divs[2].style.backgroundColor = "rgb(1, 0, 0)";
+      // // console.log(Math.floor(1 / num * 256));
+      // divs[2].style.position = "absolute";
+      // divs[2].id = "div" + 2;
+      // document.body.appendChild(divs[2]);
 
-      agents[2] = sim.add_agent(-100, 0, maxSpeed);
-      // console.log("-sim.getAgentPosition(i): ", sim.get_agent_position(i).neg());
-      sim.set_agent_goal(agents[2], 100, 0);
+      // agents[2] = sim.add_agent(-100, 0, maxSpeed);
+      // // console.log("-sim.getAgentPosition(i): ", sim.get_agent_position(i).neg());
+      // sim.set_agent_goal(agents[2], 100, 0);
 
-      divs[3] = document.createElement("div");
-      divs[3].style.left = Math.floor(x + temp) + "px";
-      divs[3].style.top = Math.floor(y + temp) + "px";
-      divs[3].style.width = "4px";
-      divs[3].style.height = "4px";
-      divs[3].style.borderRadius = "50%";
-      divs[3].style.backgroundColor = "rgb(1, 0, 0)";
-      // console.log(Math.floor(1 / num * 256));
-      divs[3].style.position = "absolute";
-      divs[3].id = "div" + 3;
-      document.body.appendChild(divs[3]);
+      // divs[3] = document.createElement("div");
+      // divs[3].style.left = Math.floor(x + temp) + "px";
+      // divs[3].style.top = Math.floor(y + temp) + "px";
+      // divs[3].style.width = "4px";
+      // divs[3].style.height = "4px";
+      // divs[3].style.borderRadius = "50%";
+      // divs[3].style.backgroundColor = "rgb(1, 0, 0)";
+      // // console.log(Math.floor(1 / num * 256));
+      // divs[3].style.position = "absolute";
+      // divs[3].id = "div" + 3;
+      // document.body.appendChild(divs[3]);
 
-      agents[3] = sim.add_agent(100, 0, maxSpeed);
-      // console.log("-sim.getAgentPosition(i): ", sim.get_agent_position(i).neg());
-      sim.set_agent_goal(agents[3], -100, 0);
+      // agents[3] = sim.add_agent(100, 0, maxSpeed);
+      // // console.log("-sim.getAgentPosition(i): ", sim.get_agent_position(i).neg());
+      // sim.set_agent_goal(agents[3], -100, 0);
       // }
     }
-
+    let last_position = [];
     function update_visualization(sim, divs, agents) {
-      console.log("{}", sim.get_global_time());
+      console.log("", sim.get_global_time());
       let result = true;
       for (let i = 0; i < agents.length; i++) {
         if (i == remove_id && is_remove) {
           continue;
         }
         let position = sim.get_agent_position(agents[i]);
-
-
         // lastpotion[i] = position;
-        console.log("role", agents[i], "当前位置： " , position);
+
 
         let velocity = sim.get_agent_velocity(agents[i]);
         let pref_velocity = sim.get_agent_pref_velocity(agents[i]);
-        console.log("role", agents[i], "当前速度：", velocity)
-        console.log("role", agents[i], "期望速度：", pref_velocity)
+
         let x = Math.floor(position.x) + temp;
         let y = Math.floor(position.y) + temp;
         // console.log("Agent2: " + i + "; x: " + x + "; y: " + y);
@@ -158,7 +148,20 @@
 
         // console.log("Agent: " + i + "; x: " + position.x + "; y: " + position.y);
         let goal = sim.get_agent_goal(agents[i]);
+        console.log("当前位置： ", position);
         console.log("目标位置: ", goal);
+        console.log("期望速度：", pref_velocity)
+        if (last_position.length != agents.length) {
+          last_position[i] = position;
+        } else {
+          let v_x = position.x - last_position[i].x;
+          let v_y = position.y - last_position[i].y;
+          console.log("当前速度：", { x: v_x, y: v_y })
+          // if (v_x == 0 && v_y == 0) {
+          //   debugger
+          // }
+          last_position[i] = position;
+        }
         if (goal) {
           let max_speed = sim.get_agent_max_speed(agents[i]);
           // console.log("max_speed: ", max_speed);
@@ -167,11 +170,11 @@
           let speed = max_speed > custom_speed ? custom_speed : max_speed;
           // console.log("speed: ", speed);
           let position = sim.get_agent_position(agents[i]);
+
           // console.log("position: ", position);
           let dist_pos = Vector2.new(goal.x, goal.y).sub(Vector2.new(position.x, position.y));
           // console.log("dist_pos: ", dist_pos);
           let dist_sq = Vector2.abs_sq(dist_pos);
-          console.log("dist_sq: ", dist_sq);
           let velocity = Vector2.normalize(dist_pos).mul_number(speed * sim.get_time_step());
           // console.log("velocity: ", velocity);
           // console.log("Vector2.abs_sq(velocity): ", Vector2.abs_sq(velocity));
@@ -179,10 +182,11 @@
             // pref_velocity = velocity;
             // 还未到达目标点
             result = false;
-          }else{
-            sim.set_agent_goal(agents[i], null, null);
+          } else {
+            // sim.set_agent_goal(agents[i], null, null);
           }
         }
+        console.log("");
       }
 
       if (result) {
@@ -227,7 +231,7 @@
           clearInterval(id);
         }
         let res = sim.do_step();
-        console.log("======= time: ", performance.now() - begin, " res: " + res);
+        // console.log("======= time: ", performance.now() - begin, " res: " + res);
       }, 16)
     });
 

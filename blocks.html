@@ -37,7 +37,7 @@
 
     const temp = 200;
     const num = 100;
-    const maxSpeed = 1.0;
+    const maxSpeed = 0.25;
     const RAND_MAX = 0x7fff;
 
     let lastpotion = [];
@@ -46,14 +46,14 @@
 
 
       /* Specify the global time step of the simulation. */
-      sim.set_time_step(0.25);
+      sim.set_time_step(1.0);
       let time = performance.now();
       console.log("time: ", time);
       // 初始化随机数种子
       sim.set_rng_seed(time * 1000);
 
       /* Specify the default parameters for agents that are subsequently added. */
-      sim.set_agent_defaults(15.0, 10000, 1.0, 1.0, 2.5, maxSpeed, 0.0, 0.0);
+      sim.set_agent_defaults(15.0, 10000, 10.0, 10.0, 2.5, maxSpeed, 0.0, 0.0);
 
       /*
        * Add agents, specifying their start position, and store their goals on the
@@ -208,18 +208,27 @@
     function update_visualization(sim, divs, agents) {
       console.log("{}", sim.get_global_time());
       for (let i = 0; i < agents.length; i++) {
-        if (i === 94) {
+        // if (i === 98) {
           console.log("Agent: " + i + "; id: " + agents[i]);
-        }
-        let position = sim.get_agent_position(agents[i]);
-        // console.log("Agent: " + i + "; x: " + position.x() + "; y: " + position.y());
+          let position = sim.get_agent_position(agents[i]);
+          console.log("Agent pos: ", position);
 
-        let x = Math.round(position.x) + temp;
-        let y = Math.round(position.y) + temp;
-        // console.log("Agent2: " + i + "; x: " + x + "; y: " + y);
+          let velocity = sim.get_agent_velocity(agents[i]);
+          console.log("实际速度：", velocity)
 
-        divs[i].style.left = x + "px";
-        divs[i].style.top = y + "px";
+          let pref_velocity = sim.get_agent_pref_velocity(agents[i]);
+          console.log("期望速度：", pref_velocity)
+
+          let goal = sim.get_agent_goal(agents[i]);
+          console.log("期望目标: {:?}", goal);
+          let x = Math.round(position.x) + temp;
+          let y = Math.round(position.y) + temp;
+          // console.log("Agent2: " + i + "; x: " + x + "; y: " + y);
+
+          divs[i].style.left = x + "px";
+          divs[i].style.top = y + "px";
+        // }
+
       }
     }
 
@@ -229,26 +238,26 @@
        * direction of the goal.
        */
 
-      for (let i = 0; i < agents.length; i++) {
-        let goal_vector = goals[i].sub(sim.get_agent_position(agents[i]));
+      // for (let i = 0; i < agents.length; i++) {
+      //   let goal_vector = goals[i].sub(sim.get_agent_position(agents[i]));
 
-        if (Vector2.abs_sq(goal_vector) > 1) {
-          goal_vector = Vector2.normalize(goal_vector);
-        }
-        // console.log("========= goal_vector", goal_vector.x(), goal_vector.y());
-        sim.set_agent_pref_velocity(agents[i], goal_vector.x, goal_vector.y);
+      //   if (Vector2.abs_sq(goal_vector) > 1) {
+      //     goal_vector = Vector2.normalize(goal_vector);
+      //   }
+      // console.log("========= goal_vector", goal_vector.x(), goal_vector.y());
+      // sim.set_agent_pref_velocity(agents[i], goal_vector.x, goal_vector.y);
 
-        /*
-        * Perturb a little to avoid deadlocks due to perfect symmetry.
-        */
-        // let angle = Math.random() * RAND_MAX * 2.0 * PI / RAND_MAX;
-        // let dist = Math.random() * RAND_MAX * 0.0001 / RAND_MAX;
-        // // console.log("angle: " + angle + "; dist: " + dist);
-        // let v = Vector2.new(Math.cos(angle), Math.sin(angle)).mul_number(dist).add(sim.get_agent_pref_velocity(agents[i]))
-        // console.log("v.x: " + v.x() + "; v.y" + v.y());
+      /*
+      * Perturb a little to avoid deadlocks due to perfect symmetry.
+      */
+      // let angle = Math.random() * RAND_MAX * 2.0 * PI / RAND_MAX;
+      // let dist = Math.random() * RAND_MAX * 0.0001 / RAND_MAX;
+      // // console.log("angle: " + angle + "; dist: " + dist);
+      // let v = Vector2.new(Math.cos(angle), Math.sin(angle)).mul_number(dist).add(sim.get_agent_pref_velocity(agents[i]))
+      // console.log("v.x: " + v.x() + "; v.y" + v.y());
 
-        // sim.set_agent_pref_velocity(i, v);
-      }
+      // sim.set_agent_pref_velocity(i, v);
+      // }
     }
 
     function reached_goal(sim, goals, agents) {
@@ -291,7 +300,7 @@
 
         // console.log("======= time: ", performance.now() - begin);
         // if (reached_goal(sim, goals, agents)) {
-          // clearInterval(id);
+        // clearInterval(id);
         // }
         global_time += performance.now() - begin;
       }, 16)

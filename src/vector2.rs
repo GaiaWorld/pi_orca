@@ -29,6 +29,7 @@ impl Vector2 {
         self.y
     }
 
+    /// 加上一个向量
     pub fn add(&self, other: &Vector2) -> Vector2 {
         Self {
             x: self.x + other.x,
@@ -36,6 +37,7 @@ impl Vector2 {
         }
     }
 
+    /// 减掉一个矢量
     pub fn sub(&self, other: &Vector2) -> Vector2 {
         Self {
             x: self.x - other.x,
@@ -43,10 +45,17 @@ impl Vector2 {
         }
     }
 
+    /// 乘以一个矢量
     pub fn mul(&self, other: &Vector2) -> f32 {
         self.x * other.x + self.y * other.y
     }
 
+    /**
+     * \relates    Vector2
+     * \brief      计算指定二维向量与指定标量值的标量乘积。
+     * \param      other           应计算标量乘法的标量值。    
+     * \return     二维向量与标量值的标量乘法。
+     */
     pub fn mul_number(&self, other: f32) -> Vector2 {
         Self {
             x: self.x * other,
@@ -54,6 +63,7 @@ impl Vector2 {
         }
     }
 
+    /// 除以一个标量
     pub fn div(&self, other: f32) -> Vector2 {
         Self {
             x: self.x / other,
@@ -61,6 +71,7 @@ impl Vector2 {
         }
     }
 
+    /// 反转一个矢量
     pub fn neg(&self) -> Vector2 {
         Self {
             x: -self.x,
@@ -68,30 +79,53 @@ impl Vector2 {
         }
     }
 
+    /**
+     * \relates    Vector2
+     * \brief      计算指定二维向量的长度。
+     * \param      vector 要计算其长度的二维向量。       
+     * \return     二维向量的长度。
+     */
     pub fn abs(v: &Vector2) -> f32 {
         return ((*v) * (*v)).sqrt();
     }
 
+    /**
+     * \relates    Vector2
+     * \brief      计算指定二维向量的长度平方。
+     * \param      要计算其长度平方的二维向量。          
+     * \return     二维向量的平方长度。
+     */
     pub fn abs_sq(v: &Vector2) -> f32 {
         return (*v) * (*v);
     }
 
+    /**
+     * \relates    Vector2
+     * \brief      计算由指定二维向量组成的行列式二维方阵。
+     * \param      vector1         二维方阵的顶行。
+     * \param      vector2         二维方阵的底行。
+     * \return     二维方阵的行列式。
+     */
     pub fn det(v1: &Vector2, v2: &Vector2) -> f32 {
         return v1.x() * v2.y() - v1.y() * v2.x();
     }
 
+    /**
+     * \relates    Vector2
+     * \brief      计算指定二维向量的归一化。
+     * \param      vector  要计算归一化的二维向量。         
+     * \return     二维向量的归一化。
+     */
     pub fn normalize(vector: &Vector2) -> Vector2 {
         return (*vector) / Self::abs(vector);
     }
 
     /**
-     * \brief      Computes the squared distance from a line segment with the
-     *             specified endpoints to a specified point.
-     * \param      a               The first endpoint of the line segment.
-     * \param      b               The second endpoint of the line segment.
-     * \param      c               The point to which the squared distance is to
-     *                             be calculated.
-     * \return     The squared distance from the line segment to the point.
+     * \brief      计算从具有指定端点的线段到指定点的平方距离。
+     * \param      a               线段的第一个端点。
+     * \param      b               线段的第二个端点。
+     * \param      c               要计算平方距离的点。
+     * \return     从线段到点的平方距离。
      */
     pub fn dist_sq_point_line_segment(a: &Vector2, b: &Vector2, c: &Vector2) -> f32 {
         let r = (((*c) - *(a)) * ((*b) - *(a))) / Self::abs_sq(&((*b) - *(a)));
@@ -106,13 +140,11 @@ impl Vector2 {
     }
 
     /**
-     * \brief      Computes the signed distance from a line connecting the
-     *             specified points to a specified point.
-     * \param      a               The first point on the line.
-     * \param      b               The second point on the line.
-     * \param      c               The point to which the signed distance is to
-     *                             be calculated.
-     * \return     Positive when the point c lies to the left of the line ab.
+     * \brief      计算从连接指定点的线到指定点的有符号距离。
+     * \param      a               线上的第一个点。
+     * \param      b               线上的第二个点。
+     * \param      c               要计算符号距离的点。
+     * \return     当点 c 位于直线 ab 的左侧时为正。
      */
     pub fn left_of(a: &Vector2, b: &Vector2, c: &Vector2) -> f32 {
         return Self::det(&(*a - *c), &(*b - *a));

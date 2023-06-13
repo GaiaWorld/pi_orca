@@ -267,10 +267,10 @@ impl RVOSimulator {
             .set_agent_time_horizon_obst(agent_no, time_horizon_obst)
     }
 
-    // pub fn set_agent_velocity(&mut self, agent_no: f64, velocity: &[f32]) -> bool {
-    //     let velocity = Vector2::new(velocity[0], velocity[1]);
-    //     self.0.set_agent_velocity(agent_no, &velocity)
-    // }
+    pub fn set_agent_velocity(&mut self, agent_no: f64, velocity_x: f32, velocity_y: f32,) -> bool {
+        let velocity = Vector2::new(velocity_x, velocity_y);
+        self.0.set_agent_velocity(agent_no, &velocity)
+    }
 
     pub fn set_time_step(&mut self, time_step: f32) {
         self.0.set_time_step(time_step)

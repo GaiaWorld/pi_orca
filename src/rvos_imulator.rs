@@ -25,6 +25,7 @@ pub struct RVOSimulator {
 }
 
 impl RVOSimulator {
+    /// 创建一个默认模拟器
     pub fn default() -> Self {
         let max = nalgebra::Vector2::new(100f32, 100f32);
         let min = max / 100f32;
@@ -58,6 +59,7 @@ impl RVOSimulator {
         }
     }
 
+    /// 创建一个新的模拟器，并指定参数
     pub fn new(
         time_step: f32,
         neighbor_dist: f32,
@@ -112,6 +114,7 @@ impl RVOSimulator {
         sim_
     }
 
+    /// 添加一个代理，使用默认的参数
     pub fn add_agent(&mut self, position: &Vector2, speed: f32) -> f64 {
         if self.default_agent.is_none() {
             return f64::MAX;
@@ -132,23 +135,17 @@ impl RVOSimulator {
         agent.id_ = self.id_num;
         agent.custom_speed = Some(speed);
         self.id_num += 1;
-        // println!(
-        //     "addAgent !!! id: {:?}, ab: {:?}",
-        //     agent.id_,
-        //     agent.compute_aabb()
-        // );
+
+
         let ab: AABB = agent.compute_aabb();
         let id = self.agents_.insert(agent);
-        // if let Some(a) = self.agents_.get_mut(id) {
-        //     a.id_ = id;
-        // }
-        self.tile_map.add(id, ab, 0);
 
-        // let agent = Box::into_raw(Box::new(agent));
+        self.tile_map.add(id, ab, 0);
 
         return unsafe { std::mem::transmute(id) };
     }
 
+    /// 添加一个代理并指定代理的属性
     pub fn add_agent2(
         &mut self,
         position: &Vector2,
@@ -184,6 +181,7 @@ impl RVOSimulator {
         unsafe { std::mem::transmute(id) }
     }
 
+    /// 删除代理。
     pub fn remove_agent(&mut self, id: f64) -> bool {
         let id = unsafe { std::mem::transmute(id) };
         if let Some(_) = self.tile_map.remove(id) {
@@ -303,7 +301,6 @@ impl RVOSimulator {
                     res = false;
                 }
             }
-
             agents.compute_neighbors();
             obstacle_num.push(agents.compute_obstacle_orca());
         }
@@ -315,16 +312,19 @@ impl RVOSimulator {
                 index += 1;
             }
 
+            //将新的速度应用于所有代理，并初始化状态
             for (_id, agents) in &mut self.agents_ {
                 agents.update();
             }
 
+            // 叠加时间
             self.global_time += self.time_step;
         }
 
         res
     }
 
+    /// 更新代理的AABB
     fn update_tree(&mut self) {
         for (id, agents) in &mut self.agents_ {
             self.tile_map.update(id, agents.compute_aabb());
@@ -373,6 +373,7 @@ impl RVOSimulator {
         default_agent.velocity_ = *velocity;
     }
 
+    /// 获取代理的邻居代理
     pub fn get_agent_agent_neighbor(&self, agent_no: f64, neighbor_no: usize) -> Option<f64> {
         let agent_no = unsafe { std::mem::transmute(agent_no) };
         if let Some(v) = self.agents_.get(agent_no) {
@@ -381,6 +382,7 @@ impl RVOSimulator {
         None
     }
 
+    /// 获取代理的最大邻居数
     pub fn get_agent_max_neighbors(&self, agent_no: f64) -> Option<usize> {
         let agent_no = unsafe { std::mem::transmute(agent_no) };
         if let Some(v) = self.agents_.get(agent_no) {
@@ -389,6 +391,7 @@ impl RVOSimulator {
         None
     }
 
+    /// 获取代理的最大速度
     pub fn get_agent_max_speed(&self, agent_no: f64) -> Option<f32> {
         // return self.agents_[agent_no].max_speed;
         let agent_no = unsafe { std::mem::transmute(agent_no) };
@@ -398,6 +401,7 @@ impl RVOSimulator {
         None
     }
 
+    /// 获取代理的邻居距离
     pub fn get_agent_neighbor_dist(&self, agent_no: f64) -> Option<f32> {
         let agent_no = unsafe { std::mem::transmute(agent_no) };
         if let Some(v) = self.agents_.get(agent_no) {
@@ -406,6 +410,7 @@ impl RVOSimulator {
         None
     }
 
+    /// 获取代理的代理邻居数量
     pub fn get_agent_num_agent_neighbors(&self, agent_no: f64) -> Option<usize> {
         let agent_no = unsafe { std::mem::transmute(agent_no) };
         if let Some(v) = self.agents_.get(agent_no) {
@@ -414,6 +419,7 @@ impl RVOSimulator {
         None
     }
 
+    /// 获取代理的障碍物邻居数量
     pub fn get_agent_num_obstacle_neighbors(&self, agent_no: f64) -> Option<usize> {
         let agent_no = unsafe { std::mem::transmute(agent_no) };
         if let Some(v) = self.agents_.get(agent_no) {
@@ -422,6 +428,7 @@ impl RVOSimulator {
         None
     }
 
+    /// 获取代理的orca线数量
     pub fn get_agent_num_orcalines(&self, agent_no: f64) -> Option<usize> {
         let agent_no = unsafe { std::mem::transmute(agent_no) };
         if let Some(v) = self.agents_.get(agent_no) {
@@ -430,6 +437,7 @@ impl RVOSimulator {
         None
     }
 
+    /// 获取代理的障碍物邻居。
     pub fn get_agent_obstacle_neighbor(&self, agent_no: f64, neighbor_no: f64) -> Option<f64> {
         let agent_no = unsafe { std::mem::transmute(agent_no) };
         if let Some(v) = self.agents_.get(agent_no) {
@@ -438,6 +446,7 @@ impl RVOSimulator {
         None
     }
 
+    /// 获取代理的位置
     pub fn get_agent_position(&self, agent_no: f64) -> Option<Vector2> {
         let agent_no = unsafe { std::mem::transmute(agent_no) };
         if let Some(v) = self.agents_.get(agent_no) {
@@ -446,6 +455,7 @@ impl RVOSimulator {
         None
     }
 
+    /// 获取代理的首选速度。
     pub fn get_agent_pref_velocity(&self, agent_no: f64) -> Option<Vector2> {
         let agent_no = unsafe { std::mem::transmute(agent_no) };
         if let Some(v) = self.agents_.get(agent_no) {
@@ -454,6 +464,7 @@ impl RVOSimulator {
         None
     }
 
+    /// 获取代理相的半径。
     pub fn get_agent_radius(&self, agent_no: f64) -> Option<f32> {
         let agent_no = unsafe { std::mem::transmute(agent_no) };
         if let Some(v) = self.agents_.get(agent_no) {
@@ -462,6 +473,7 @@ impl RVOSimulator {
         None
     }
 
+    /// 获取代理相对于代理的时间视野。
     pub fn get_agent_time_horizon(&self, agent_no: f64) -> Option<f32> {
         let agent_no = unsafe { std::mem::transmute(agent_no) };
         if let Some(v) = self.agents_.get(agent_no) {
@@ -470,6 +482,7 @@ impl RVOSimulator {
         None
     }
 
+    /// 获取代理相对于障碍物的时间视野。
     pub fn get_agent_time_horizon_obst(&self, agent_no: f64) -> Option<f32> {
         let agent_no = unsafe { std::mem::transmute(agent_no) };
         if let Some(v) = self.agents_.get(agent_no) {
@@ -478,6 +491,7 @@ impl RVOSimulator {
         None
     }
 
+    /// 获取代理的速度。
     pub fn get_agent_velocity(&self, agent_no: f64) -> Option<Vector2> {
         let agent_no = unsafe { std::mem::transmute(agent_no) };
         if let Some(v) = self.agents_.get(agent_no) {
@@ -486,18 +500,22 @@ impl RVOSimulator {
         None
     }
 
+    /// 获取全局累计模拟时间。
     pub fn get_global_time(&self) -> f32 {
         return self.global_time;
     }
 
+    /// 获取代理的数量。
     pub fn get_num_agents(&self) -> usize {
         return self.agents_.len();
     }
 
+    /// 获取障碍物的数量
     pub fn get_num_obstacle_vertices(&self) -> usize {
         return self.obstacles_.len();
     }
 
+    /// 获取障碍物的第一个顶点。
     pub fn get_obstacle_vertex(&self, vertex_no: f64) -> Option<Vector2> {
         let key = unsafe { std::mem::transmute(vertex_no) };
         if let Some(v) = self.obstacles_.get(key) {
@@ -506,6 +524,7 @@ impl RVOSimulator {
         None
     }
 
+    /// 获取障碍物的下一个顶点。
     pub fn get_next_obstacle_vertex_no(&self, vertex_no: f64) -> Option<f64> {
         let key = unsafe { std::mem::transmute(vertex_no) };
         if let Some(v) = self.obstacles_.get(key) {
@@ -516,6 +535,7 @@ impl RVOSimulator {
         None
     }
 
+    /// 获取障碍物的前一个顶点。
     pub fn get_prev_obstacle_vertex_no(&self, vertex_no: f64) -> Option<f64> {
         let key = unsafe { std::mem::transmute(vertex_no) };
         if let Some(v) = self.obstacles_.get(key) {
@@ -526,10 +546,12 @@ impl RVOSimulator {
         None
     }
 
+    /// 获取时间步长。
     pub fn get_time_step(&self) -> f32 {
         return self.time_step;
     }
 
+    /// 设置代理的最大邻居数。
     pub fn set_agent_max_neighbors(&mut self, agent_no: f64, max_neighbors: usize) -> bool {
         let agent_no = unsafe { std::mem::transmute(agent_no) };
         if let Some(agent) = self.agents_.get_mut(agent_no) {
@@ -539,6 +561,7 @@ impl RVOSimulator {
         false
     }
 
+    /// 设置代理的最大速度。
     pub fn set_agent_max_speed(&mut self, agent_no: f64, max_speed: f32) -> bool {
         let agent_no = unsafe { std::mem::transmute(agent_no) };
         if let Some(agent) = self.agents_.get_mut(agent_no) {
@@ -548,6 +571,7 @@ impl RVOSimulator {
         false
     }
 
+    /// 设置代理的邻居距离。
     pub fn set_agent_neighbor_dist(&mut self, agent_no: f64, neighbor_dist: f32) -> bool {
         let agent_no = unsafe { std::mem::transmute(agent_no) };
         if let Some(agent) = self.agents_.get_mut(agent_no) {
@@ -557,6 +581,7 @@ impl RVOSimulator {
         false
     }
 
+    /// 设置代理的位置。
     pub fn set_agent_position(&mut self, agent_no: f64, position: &Vector2) -> bool {
         let agent_no = unsafe { std::mem::transmute(agent_no) };
         if let Some(agent) = self.agents_.get_mut(agent_no) {
@@ -566,6 +591,7 @@ impl RVOSimulator {
         false
     }
 
+    /// 设置代理的首选速度。
     pub fn set_agent_pref_velocity(&mut self, agent_no: f64, pref_velocity: &Vector2) -> bool {
         let agent_no = unsafe { std::mem::transmute(agent_no) };
         if let Some(agent) = self.agents_.get_mut(agent_no) {
@@ -575,6 +601,7 @@ impl RVOSimulator {
         false
     }
 
+    /// 设置代理的半径。
     pub fn set_agent_radius(&mut self, agent_no: f64, radius: f32) -> bool {
         let agent_no = unsafe { std::mem::transmute(agent_no) };
         if let Some(agent) = self.agents_.get_mut(agent_no) {
@@ -593,7 +620,13 @@ impl RVOSimulator {
     pub fn set_agent_goal(&mut self, agent_no: f64, goal: Option<Vector2>) -> bool {
         let agent_no = unsafe { std::mem::transmute(agent_no) };
         if let Some(agent) = self.agents_.get_mut(agent_no) {
-            agent.goal_position = goal;
+            agent.goal_position = goal.clone();
+            if let Some(goal) = goal {
+                agent.calc_pref_velocity(goal);
+            } else {
+                agent.pref_velocity = Vector2::new(0.0, 0.0);
+                agent.velocity_ = Vector2::new(0.0, 0.0);
+            }
             return true;
         }
         false
@@ -614,6 +647,7 @@ impl RVOSimulator {
         false
     }
 
+    /// 设置代理的相对于代理时间视野
     pub fn set_agent_time_horizon(&mut self, agent_no: f64, time_horizon: f32) -> bool {
         let agent_no = unsafe { std::mem::transmute(agent_no) };
         if let Some(agent) = self.agents_.get_mut(agent_no) {
@@ -623,6 +657,7 @@ impl RVOSimulator {
         false
     }
 
+    /// 设置代理的相对于障碍物时间视野
     pub fn set_agent_time_horizon_obst(&mut self, agent_no: f64, time_horizon_obst: f32) -> bool {
         let agent_no = unsafe { std::mem::transmute(agent_no) };
         if let Some(agent) = self.agents_.get_mut(agent_no) {
@@ -632,6 +667,7 @@ impl RVOSimulator {
         false
     }
 
+    /// 设置代理的速度
     pub fn set_agent_velocity(&mut self, agent_no: f64, velocity: &Vector2) -> bool {
         let agent_no = unsafe { std::mem::transmute(agent_no) };
         if let Some(agent) = self.agents_.get_mut(agent_no) {
@@ -641,10 +677,12 @@ impl RVOSimulator {
         false
     }
 
+    /// 设置每帧模拟的时间步长
     pub fn set_time_step(&mut self, time_step: f32) {
         self.time_step = time_step;
     }
 
+    /// 设置随机种子
     pub fn set_rng_seed(&mut self, seed: u32) {
         self.rng = WyRng::seed_from_u64(seed as u64);
     }
@@ -690,6 +728,7 @@ impl RVOSimulator {
         r
     }
 
+    /// 计算代理的新位置
     pub fn get_obstacle(&self, obstacle_no: DefaultKey) -> Option<*const Obstacle> {
         if let Some(v) = self.obstacles_.get(obstacle_no) {
             return Some(v);
@@ -697,6 +736,7 @@ impl RVOSimulator {
         None
     }
 
+    /// 获取代理
     pub fn get_agent(&mut self, agent_no: DefaultKey) -> Option<*mut Agent> {
         if let Some(v) = self.agents_.get_mut(agent_no) {
             return Some(v);
@@ -704,6 +744,7 @@ impl RVOSimulator {
         None
     }
 
+    /// 获取代理的orca线
     pub fn get_agent_orcaline(&self, agent_no: f64, line_no: usize) -> Option<Line> {
         let agent_no = unsafe { std::mem::transmute(agent_no) };
         if let Some(v) = self.agents_.get(agent_no) {
@@ -712,6 +753,7 @@ impl RVOSimulator {
         None
     }
 
+    /// 获取代理的目标位置
     pub fn get_agent_goal(&mut self, agent_no: f64) -> Option<Vector2> {
         let agent_no = unsafe { std::mem::transmute(agent_no) };
         if let Some(agent) = self.agents_.get(agent_no) {
@@ -720,6 +762,7 @@ impl RVOSimulator {
         None
     }
 
+    /// 获取代理的自定义速度
     pub fn get_agent_custom_speed(&mut self, agent_no: f64) -> Option<f32> {
         let agent_no = unsafe { std::mem::transmute(agent_no) };
         if let Some(agent) = self.agents_.get(agent_no) {

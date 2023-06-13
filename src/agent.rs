@@ -117,7 +117,7 @@ impl Agent {
 
     /// 计算新速度。
     pub fn compute_new_velocity(&mut self, num_obst_lines: usize) {
-        self.compute_pref_velocity();
+        // self.compute_pref_velocity();
         let inv_time_horizon = 1.0 / self.time_horizon;
 
         // 创建agent ORCA 线。
@@ -163,6 +163,7 @@ impl Agent {
 
                 let mut i = self.agent_neighbors.len() - 1;
 
+                // 根据距离排序
                 while i != 0 && dist_sq < self.agent_neighbors[i - 1].0 {
                     self.agent_neighbors[i] = self.agent_neighbors[i - 1].clone();
                     i -= 1;
@@ -204,9 +205,12 @@ impl Agent {
         }
     }
 
+    /// 跟新代理的位置。
     pub fn update(&mut self) {
         self.velocity_ = self.new_velocity;
+        // 计算下一个点的位置。
         let next_position = self.position_ + self.velocity_ * (unsafe { &*self.sim_ }).time_step;
+        // 判断是否到途经目标点。
         if let Some(goal) = &self.goal_position {
             // 如过不是从目标点推开的，那么就需要判断是否到达目标点
             if goal.x != self.position_.x || goal.y != self.position_.y {
@@ -227,9 +231,39 @@ impl Agent {
                     return;
                 }
             }
+            self.position_ = next_position;
+            // 如果当前速度不等于期望速度，则重新计算期望速度
+            if self.velocity_.x != self.pref_velocity.x || self.velocity_.y != self.pref_velocity.y
+            {
+                self.calc_pref_velocity(*goal);
+                // 随机一下速度
+                let x = (unsafe { &mut *self.sim_ }).get_rand() * self.pref_velocity.x * 0.02;
+                let y = (unsafe { &mut *self.sim_ }).get_rand() * self.pref_velocity.y * 0.02;
+                let v = Vector2::new(x, y);
+                // 使用部分上一帧的速度，部分当前帧的期望速度和随机值
+                self.velocity_ = v + self.velocity_ * 0.98;
+            }
+        } else {
+            self.position_ = next_position;
         }
-        self.position_ = next_position;
         self.is_computed = false;
+    }
+
+    /// 重新计算代理的预期速度
+    pub fn calc_pref_velocity(&mut self, goal: Vector2) {
+        let speed = if self.custom_speed.is_some() && self.max_speed > self.custom_speed.unwrap() {
+            self.custom_speed.unwrap()
+        } else {
+            self.max_speed
+        };
+        let dist_pos = goal - &self.position_;
+        // 根据最大速度或者自定义速度计算pref_velocity
+        // 当距离过近时，pref_velocity为dist_pos
+        if Vector2::abs_sq(&dist_pos) > speed * speed {
+            self.pref_velocity = Vector2::normalize(&dist_pos).mul_number(speed);
+        } else {
+            self.pref_velocity = dist_pos;
+        }
     }
 
     pub fn linear_program1(
@@ -295,7 +329,7 @@ impl Agent {
             }
         } else {
             /* 优化最近点。 */
-            let t = lines[line_no].direction * (*opt_velocity - lines[line_no].point);
+            let t: f32 = lines[line_no].direction * (*opt_velocity - lines[line_no].point);
             if t < t_left {
                 *result = lines[line_no].point + lines[line_no].direction * t_left;
             } else if t > t_right {
@@ -399,7 +433,7 @@ impl Agent {
                     result,
                 ) < proj_lines.len()
                 {
-                    // 这在原则上不应该发生。 
+                    // 这在原则上不应该发生。
                     // 根据定义，结果已经在该线性程序的可行域中。 如果失败，则为小浮点误差，保留当前结果。
                     *result = temp_result;
                 }
@@ -435,6 +469,7 @@ impl Agent {
 }
 
 impl Agent {
+    /// 计算代理的AABB包围盒
     pub fn compute_aabb(&self) -> AABB {
         AABB {
             mins: Point2::new(
@@ -448,6 +483,7 @@ impl Agent {
         }
     }
 
+    /// 计算代理的orca线
     pub fn compute_agent_orca(&mut self, other: &Agent, inv_time_horizon: f32) {
         // 相对位置
         let relative_position = other.position_ - self.position_;
@@ -467,14 +503,14 @@ impl Agent {
             // 当前的相对速度相对于发生碰摔的临界速度的余量
             // 可以理解为在速度域中，撞击速度指向当前速康的向量
             // 在八何表示中，就是小圆中心指向当前速度点的向量
-            let w = relative_velocity - relative_position * inv_time_horizon;
             /* 从截止中心到相对速度的矢量。*/
+            let w: Vector2 = relative_velocity - relative_position * inv_time_horizon;
             // 此向量的平方
-            let w_length_sq = Vector2::abs_sq(&w);
+            let w_length_sq = Vector2::abs_sq(&w); // 1
 
             // 此向量到碰撞方向的投影
             //在几何表示中，relativeposition即为大圆中心，此处可以理解为此向量到园锥中心向量的投影
-            let dot_product1 = w * relative_position;
+            let dot_product1 = w * relative_position; // 1.1
 
             // 当前速度相对于碰撞速度的余量
             // 到碰撞方向的投影小于0，说明目前速度在碰撞方向的速度还没到碰撞需要的速度
@@ -487,13 +523,14 @@ impl Agent {
             // 所以这个条件相当于是拿到了我们参考图中前侧小园的弧线部分，即障碍区城的前侧边缘
             if dot_product1 < 0.0 && Vector2::sqr(dot_product1) > combined_radius_sq * w_length_sq {
                 /* 最近的点在圆上 */
-                let w_length = w_length_sq.sqrt();
+                let w_length: f32 = w_length_sq.sqrt();
                 let unit_w = w / w_length;
                 // 方向为w顺时针转90°，相当于是当前速度相对于小圆的切线
                 line.direction = Vector2::new(unit_w.y, -unit_w.x);
                 // 此处combined_radius * inv_time_horizon为小圆半径
                 // 减去wLength就是把w放在小圆圆心时，w终点到小圆表面的距高
                 _u = unit_w * (combined_radius * inv_time_horizon - w_length);
+                // _u = unit_w * combined_radius * inv_time_horizon - w;
             } else {
                 /* 最近的点在腿上 */
                 // 勾股定埋，计算出从原点开始的两京腿的长底
@@ -517,7 +554,6 @@ impl Agent {
                         -relative_position.x * combined_radius + relative_position.y * leg,
                     ) / dist_sq;
                 }
-
                 let dot_product2 = relative_velocity * line.direction;
                 // 此址u应该是当前速度到腿的年线
                 _u = line.direction * dot_product2 - relative_velocity;
@@ -540,6 +576,7 @@ impl Agent {
         self.orca_lines.push(line);
     }
 
+    /// 计算障碍物的 ORCA 线
     pub fn compute_obstacle_orca(&mut self) -> usize {
         self.orca_lines.clear();
 
@@ -807,39 +844,9 @@ impl Agent {
 
         self.orca_lines.len()
     }
-
-    pub fn compute_pref_velocity(&mut self) {
-        // 当未设置目标位置时，不需要计算pref_velocity。
-        let sim = unsafe { &mut *self.sim_ };
-        let mut pref_velocity = Vector2::new(0.0, 0.0);
-        if let Some(goal_position) = self.goal_position {
-            let speed =
-                if self.custom_speed.is_some() && self.max_speed > self.custom_speed.unwrap() {
-                    self.custom_speed.unwrap()
-                } else {
-                    self.max_speed
-                };
-            let dist_pos = goal_position.sub(&self.position_);
-            // 如果正处于目标点上时，那么pref_velocity为0
-            if dist_pos.x != 0. || dist_pos.y != 0. {
-                // 根据最大速度或者自定义速度计算pref_velocity
-                pref_velocity = Vector2::normalize(&dist_pos).mul_number(speed);
-
-                let have_orca = self.orca_lines.is_empty();
-                // 如果没有orca，那么pref_velocity不需要进行随机扰动
-                if !have_orca {
-                    let angle = sim.get_rand() * 2.0 * std::f32::consts::PI;
-                    let dist = sim.get_rand() * 0.0001;
-                    let temp = Vector2::new(f32::cos(angle), f32::sin(angle)) * dist;
-                    pref_velocity = pref_velocity + temp;
-                }
-            }
-        }
-        self.pref_velocity = pref_velocity;
-    }
 }
 
-// 判断直线p1p2与圆c是否相交，相交返回true，否则返回false
+/// 判断直线p1p2与圆c是否相交，相交返回true，否则返回false
 pub fn judge(p1: Vector2, p2: Vector2, cricle_pos: Vector2, cricle_radius: f32) -> bool {
     let flag1 = (p1.x - cricle_pos.x) * (p1.x - cricle_pos.x)
         + (p1.y - cricle_pos.y) * (p1.y - cricle_pos.y)
@@ -885,6 +892,7 @@ pub fn judge(p1: Vector2, p2: Vector2, cricle_pos: Vector2, cricle_radius: f32) 
     }
 }
 
+/// 判断点是否在aabb内
 pub fn intersects(ab_mins: &Vector2, ab_maxs: &Vector2, b: &Vector2) -> bool {
     ab_mins.x <= b.x && ab_maxs.x >= b.x && ab_mins.y <= b.y && ab_maxs.y >= b.y
 }
