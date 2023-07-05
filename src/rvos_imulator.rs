@@ -136,7 +136,6 @@ impl RVOSimulator {
         agent.custom_speed = Some(speed);
         self.id_num += 1;
 
-
         let ab: AABB = agent.compute_aabb();
         let id = self.agents_.insert(agent);
 
@@ -767,6 +766,25 @@ impl RVOSimulator {
         let agent_no = unsafe { std::mem::transmute(agent_no) };
         if let Some(agent) = self.agents_.get(agent_no) {
             return agent.custom_speed;
+        }
+        None
+    }
+
+    /// 设置代理的质量; 1.0为默认值, 必须大于0
+    pub fn set_agent_quality(&mut self, agent_no: f64, quality: f64) -> bool {
+        let agent_no = unsafe { std::mem::transmute(agent_no) };
+        if let Some(agent) = self.agents_.get_mut(agent_no) {
+            agent.quality = quality as f32;
+            return true;
+        }
+        false
+    }
+
+    /// 获取代理的质量
+    pub fn get_agent_quality(&mut self, agent_no: f64) -> Option<f64> {
+        let agent_no = unsafe { std::mem::transmute(agent_no) };
+        if let Some(agent) = self.agents_.get_mut(agent_no) {
+            return Some(agent.quality as f64);
         }
         None
     }

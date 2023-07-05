@@ -324,4 +324,14 @@ impl RVOSimulator {
         let v = self.0.get_agent_orcaline(agent_no, line_no);
         to_value(&v).unwrap()
     }
+
+     /// 设置代理的质量; 1.0为默认值, 必须大于0
+     pub fn set_agent_quality(&mut self, agent_no: f64, quality: f64) -> bool {
+        self.0.set_agent_quality(agent_no, quality)
+    }
+
+    /// 获取代理的质量
+    pub fn get_agent_quality(&mut self, agent_no: f64) -> Option<f64> {
+        self.0.get_agent_quality(agent_no)
+    }
 }

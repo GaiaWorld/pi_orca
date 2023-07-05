@@ -29,6 +29,7 @@ pub struct Agent {
     pub id_: usize,
     pub goal_position: Option<Vector2>,
     pub custom_speed: Option<f32>,
+    pub quality: f32,
 }
 
 impl Agent {
@@ -53,6 +54,7 @@ impl Agent {
             is_static: false,
             goal_position: None,
             custom_speed: None,
+            quality: 1.0,
         }
     }
 
@@ -485,6 +487,7 @@ impl Agent {
 
     /// 计算代理的orca线
     pub fn compute_agent_orca(&mut self, other: &Agent, inv_time_horizon: f32) {
+        let total_quality = self.quality + other.quality;
         // 相对位置
         let relative_position = other.position_ - self.position_;
         // 相对速度
@@ -571,7 +574,9 @@ impl Agent {
             line.direction = Vector2::new(unit_w.y, -unit_w.x);
             _u = unit_w * (combined_radius * inv_time_step - w_length);
         }
-        line.point = self.velocity_ + _u * 0.5;
+        // line.point = self.velocity_ + _u * 0.5;
+        // 质量越大的，其避让的权重越小
+        line.point = self.velocity_ + _u * (1.0 - self.quality / total_quality);
 
         self.orca_lines.push(line);
     }
