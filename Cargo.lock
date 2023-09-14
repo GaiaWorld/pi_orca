@@ -284,9 +284,9 @@ dependencies = [
 
 [[package]]
 name = "pi_spatial"
-version = "0.4.2"
+version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "abde765c553e7c892d2e8733469bafc2542701c9348e9f2d95aedaaad55c7f5b"
+checksum = "9a2db1076853682ac28970a295b4eb70b6e4cb97ec35895bcedc88356f2e4c35"
 dependencies = [
  "nalgebra",
  "num-traits",

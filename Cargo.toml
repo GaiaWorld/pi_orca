@@ -1,6 +1,6 @@
 [package]
 name = "pi_orca"
-version = "0.4.5"
+version = "0.4.6"
 edition = "2021"
 description = "A* Path Finding Algorithm"
 repository = "https://github.com/GaiaWorld/pi_orca.git"
@@ -13,7 +13,7 @@ keywords = ["orca", "orca2", "pi_orca"]
 crate-type = ["lib", "cdylib"]
 
 [dependencies]
-pi_spatial = "0.4"
+pi_spatial = "0.5"
 nalgebra = "0.32"
 pi_slotmap="0.1"
 parry2d = "0.13"
