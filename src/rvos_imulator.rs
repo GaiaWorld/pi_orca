@@ -700,7 +700,7 @@ impl RVOSimulator {
             let mut items = tree.get_tile_iter(i);
 
             for _ in 0..items.0 {
-                if let Some((id, _ab, _)) = items.1.next() {
+                if let Some((id, _ab)) = items.1.next() {
                     // println!("id: {:?}, ab: {:?}", id, ab);
                     r.push(id);
                 }

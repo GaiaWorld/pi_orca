@@ -1,6 +1,6 @@
 [package]
 name = "pi_orca"
-version = "0.4.6"
+version = "0.4.7"
 edition = "2021"
 description = "A* Path Finding Algorithm"
 repository = "https://github.com/GaiaWorld/pi_orca.git"
