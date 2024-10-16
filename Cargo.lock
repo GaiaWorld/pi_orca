@@ -398,10 +398,9 @@ checksum = "092930b108984d18bb333a2f402d39440967c1b721345e3f3bdbe3081183560d"
 
 [[package]]
 name = "pi_orca"
-version = "0.4.7"
+version = "0.4.8"
 dependencies = [
  "getrandom",
- "nalgebra",
  "parry2d",
  "pi_slotmap",
  "pi_spatial",

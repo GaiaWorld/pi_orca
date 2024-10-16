@@ -5,8 +5,8 @@ use crate::{
     vector2::Vector2,
 };
 
-use nalgebra::Point2;
-use parry2d::bounding_volume::Aabb as AABB;
+// use nalgebra::Point2;
+use parry2d::{bounding_volume::Aabb as AABB, na::Point2};
 use pi_slotmap::{DefaultKey, SlotMap};
 use pi_spatial::{quad_helper::QuadTree, tilemap::TileMap};
 use pi_wy_rng::WyRng;
@@ -27,7 +27,7 @@ pub struct RVOSimulator {
 impl RVOSimulator {
     /// 创建一个默认模拟器
     pub fn default() -> Self {
-        let max = nalgebra::Vector2::new(100f32, 100f32);
+        let max = parry2d::na::Vector2::new(100f32, 100f32);
         let min = max / 100f32;
         Self {
             agents_: Default::default(),
@@ -71,7 +71,7 @@ impl RVOSimulator {
         velocity: &Vector2,
         rng_seed: u32,
     ) -> Self {
-        let max = nalgebra::Vector2::new(100f32, 100f32);
+        let max = parry2d::na::Vector2::new(100f32, 100f32);
         let min = max / 100f32;
         let mut sim_ = Self {
             agents_: Default::default(),

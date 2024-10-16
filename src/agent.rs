@@ -1,5 +1,5 @@
-use nalgebra::Point2;
-use parry2d::bounding_volume::Aabb as AABB;
+// use nalgebra::Point2;
+use parry2d::{bounding_volume::Aabb as AABB, na::Point2};
 
 use crate::{
     obstacle::Obstacle,
