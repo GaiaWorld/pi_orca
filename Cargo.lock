@@ -367,7 +367,7 @@ checksum = "19a8e93aba025e5755b068c36292647d08fd6574a9921432fe60d1797f508b6b"
 
 [[package]]
 name = "pi_orca"
-version = "0.5.0"
+version = "0.5.1"
 dependencies = [
  "parry2d",
  "pi_slotmap",
